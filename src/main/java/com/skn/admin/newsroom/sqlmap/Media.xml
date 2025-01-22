@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.newsroom.mapper.MediaMapper">
+    <select id="selectMediaList" parameterType="map" resultType="com.skn.admin.newsroom.dto.SocialMedia">
+        SELECT S.UID
+             , S.SOCIAL_MEDIA_INDEX
+             , S.TITLE
+             , S.CONTENTS
+             , S.CATEGORY
+             , S.TAG_STRING
+             , S.URL
+             , S.THUMBNAIL AS THUMBNAIL_URL
+             , DATE_FORMAT(S.REG_DATE, '%Y.%m.%d') AS REG_DATE
+        FROM SOCIAL_MEDIA S
+        <where>
+            <if test="socialMediaIndex != null and socialMediaIndex != ''">
+                AND S.SOCIAL_MEDIA_INDEX = #{socialMediaIndex}
+            </if>
+        </where>
+        ORDER BY SOCIAL_MEDIA_INDEX DESC;
+    </select>
+
+    <insert id="insertBlogFeed" parameterType="com.skn.admin.newsroom.dto.SocialMedia">
+        INSERT INTO SOCIAL_MEDIA (UID, SOCIAL_MEDIA_INDEX, TITLE, CONTENTS, URL, CATEGORY, TAG_STRING, THUMBNAIL, REG_DATE)
+        VALUES (#{uid},
+                #{socialMediaIndex},
+                #{title},
+                #{contents},
+                #{url},
+                #{category},
+                #{tags},
+                #{thumbnail},
+                NOW())
+    </insert>
+</mapper>

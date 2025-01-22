@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.ir.mapper.IrScheduleMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="lang != 'EN'.toString()">
+                    LANG='KO'
+                </when>
+                <otherwise>
+                    LANG='EN'
+                </otherwise>
+            </choose>
+            <if test="startDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+            </if>
+            <if test="endDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+            </if>
+            <if test="searchWord != null and searchWord != ''">
+                <if test="searchType == 'TITLE'">
+                    AND TITLE LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <if test="searchType == 'ADMINNAME'">
+                    AND ADMIN_NAME=#{searchWord}
+                </if>
+            </if>
+            <if test="isOpen == 'Y'.toString()">
+                AND IS_OPEN = 'Y'
+            </if>
+            <if test="isOpen == 'N'.toString()">
+                AND IS_OPEN = 'N'
+            </if>
+        </where>
+    </sql>
+    <select id="selectIrScheduleList"
+            parameterType="com.skn.admin.ir.dto.request.IrScheduleSearchParam"
+            resultType="com.skn.admin.ir.dto.IrSchedule">
+        SELECT
+            UID, IR_SCHEDULE_INDEX, IR_SCHEDULE_TYPE, LANG
+            , TITLE
+            , IS_OPEN, DATE_FORMAT(REG_DATE, '%Y-%m-%d') AS REG_DATE
+            , ADMIN_NAME
+        FROM IR_SCHEDULE
+        <include refid="searchCondition"/>
+        ORDER BY IR_SCHEDULE_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectIrScheduleListCount"
+            parameterType="com.skn.admin.ir.dto.request.IrScheduleSearchParam"
+            resultType="int">
+        SELECT
+            COUNT(*)
+        FROM IR_SCHEDULE
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectIrSchedule" parameterType="string" resultType="com.skn.admin.ir.dto.IrSchedule">
+        SELECT
+            UID, IR_SCHEDULE_INDEX, IR_SCHEDULE_TYPE, TITLE, CLASSIFICATION, OPEN_DATE_TIME
+           , LANG , IS_OPEN
+        FROM IR_SCHEDULE
+        WHERE UID = #{uid}
+    </select>
+
+    <insert id="insertIrSchedule" parameterType="com.skn.admin.ir.dto.IrSchedule">
+        INSERT INTO IR_SCHEDULE (
+            UID, IR_SCHEDULE_TYPE, CLASSIFICATION, TITLE, OPEN_DATE_TIME
+            , LANG, IS_OPEN
+            , ADMIN_INDEX, ADMIN_ID, ADMIN_NAME
+        ) VALUES (
+            #{uid}, #{irScheduleType}, #{classification}, #{title}, #{openDateTime}
+            , #{lang}, #{isOpen}
+            , #{adminIndex}, #{adminId}, #{adminName}
+        )
+
+
+    </insert>
+
+    <update id="updateIrSchedule" parameterType="com.skn.admin.ir.dto.IrSchedule">
+        UPDATE IR_SCHEDULE
+        SET
+            IR_SCHEDULE_TYPE = #{irScheduleType},
+            CLASSIFICATION = #{classification},
+            TITLE = #{title},
+            OPEN_DATE_TIME = #{openDateTime},
+            LANG = #{lang},
+            IS_OPEN = #{isOpen},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteIrSchedule" parameterType="com.skn.admin.ir.dto.IrSchedule">
+        DELETE FROM IR_SCHEDULE
+        WHERE IR_SCHEDULE_INDEX = #{irScheduleIndex}
+    </delete>
+</mapper>

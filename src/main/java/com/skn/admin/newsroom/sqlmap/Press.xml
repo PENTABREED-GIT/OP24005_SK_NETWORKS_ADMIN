@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.newsroom.mapper.PressMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="lang != 'EN'.toString()">
+                    LANG='KO'
+                </when>
+                <otherwise>
+                    LANG='EN'
+                </otherwise>
+            </choose>
+            <if test="startDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+            </if>
+            <if test="endDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+            </if>
+            <if test="searchWord != null and searchWord != ''">
+                <if test="searchType == 'TITLE'">
+                    AND TITLE LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <if test="searchType == 'ADMINNAME'">
+                    AND ADMIN_NAME=#{searchWord}
+                </if>
+            </if>
+            <if test="businessAreaIndex != null and businessAreaIndex != ''">
+                AND P.BUSINESS_AREA_INDEX = #{businessAreaIndex}
+            </if>
+            <if test="isOpen == 'Y'.toString()">
+                AND P.IS_OPEN = 'Y'
+            </if>
+            <if test="isOpen == 'N'.toString()">
+                AND P.IS_OPEN = 'N'
+            </if>
+        </where>
+    </sql>
+    <select id="selectPressList"
+            parameterType="com.skn.admin.newsroom.dto.request.PressSearchParam"
+            resultType="com.skn.admin.newsroom.dto.Press">
+        SELECT
+            P.UID, P.PRESS_INDEX, P.TITLE, P.LANG
+            , BA.NAME_KO AS BUSINESS_AREA_NAME_KO
+             , BA.NAME_EN AS BUSINESS_AREA_NAME_EN
+            , P.IS_OPEN, DATE_FORMAT(P.REG_DATE, '%Y-%m-%d') AS REG_DATE
+            , P.ADMIN_NAME
+        FROM PRESS P
+            INNER JOIN BUSINESS_AREA BA ON P.BUSINESS_AREA_INDEX=BA.BUSINESS_AREA_INDEX
+        <include refid="searchCondition"/>
+        ORDER BY PRESS_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectPressListCount"
+            parameterType="com.skn.admin.newsroom.dto.request.PressSearchParam"
+            resultType="int">
+        SELECT
+            COUNT(*)
+        FROM PRESS P
+            INNER JOIN BUSINESS_AREA BA ON P.BUSINESS_AREA_INDEX=BA.BUSINESS_AREA_INDEX
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectPress" parameterType="string" resultType="com.skn.admin.newsroom.dto.Press">
+        SELECT
+            P.UID, P.PRESS_INDEX, IS_PRESS, IS_IR_NEWS, IS_BUSINESS, CONTENT, TITLE
+            , P.LANG , P.IS_OPEN
+            , DATE_FORMAT(P.REG_DATE, '%Y-%m-%d') AS REG_DATE
+            , P.BUSINESS_AREA_INDEX
+            , BA.NAME_KO AS BUSINESS_AREA_NAME_KO
+            , BA.NAME_EN AS BUSINESS_AREA_NAME_EN
+        FROM PRESS P
+            INNER JOIN BUSINESS_AREA BA ON P.BUSINESS_AREA_INDEX=BA.BUSINESS_AREA_INDEX
+        WHERE UID = #{uid}
+    </select>
+
+    <insert id="insertPress" parameterType="com.skn.admin.newsroom.dto.Press">
+        INSERT INTO PRESS (
+           UID, BUSINESS_AREA_INDEX
+           , IS_PRESS , IS_IR_NEWS, IS_BUSINESS, TITLE, CONTENT
+           , LANG, IS_OPEN
+           , ADMIN_INDEX, ADMIN_ID, ADMIN_NAME
+        ) VALUES (
+            #{uid}, #{businessAreaIndex}
+            , #{isPress}, #{isIrNews}, #{isBusiness}, #{title}, #{content}
+            , #{lang}, #{isOpen}
+            , #{adminIndex}, #{adminId}, #{adminName}
+        )
+        <selectKey keyProperty="pressIndex" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="updatePress" parameterType="com.skn.admin.newsroom.dto.Press">
+        UPDATE PRESS
+        SET
+            IS_PRESS = #{isPress},
+            BUSINESS_AREA_INDEX = #{businessAreaIndex},
+            IS_IR_NEWS = #{isIrNews},
+            IS_BUSINESS = #{isBusiness},
+            TITLE = #{title},
+            CONTENT = #{content},
+            LANG = #{lang},
+            IS_OPEN = #{isOpen},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            REG_DATE = #{regDate},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deletePress" parameterType="com.skn.admin.newsroom.dto.Press">
+        DELETE FROM PRESS
+        WHERE PRESS_INDEX = #{pressIndex}
+    </delete>
+</mapper>

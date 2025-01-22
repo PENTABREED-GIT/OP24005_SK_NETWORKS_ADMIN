@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.site.mapper.AdminMenuMapper">
+	<select id="selectMenuListAll" resultType="com.skn.admin.site.dto.AdminMenu">
+		SELECT
+			UID
+		     , MENU_INDEX
+			 , MENU_NAME
+		     , PARENT_INDEX
+		     , DEPTH
+		     , ROOT_INDEX
+			 , DESCRIPTION
+			 , URL
+			 , URL_STRING
+			 , MENU_CODE
+			 , SORT_ORDER
+			 , IS_DISPLAY
+			 , ICON
+		FROM ADMIN_MENU
+		ORDER BY SORT_ORDER, MENU_NAME
+	</select>
+	<select id="selectMenu" resultType="com.skn.admin.site.dto.AdminMenu">
+		SELECT
+			UID
+			 , MENU_NAME
+			 , DESCRIPTION
+			 , URL
+			 , URL_STRING
+			 , MENU_CODE
+			 , SORT_ORDER
+			 , IS_DISPLAY
+			 , ICON
+		FROM ADMIN_MENU
+		WHERE UID = #{uid}
+	</select>
+
+	<insert id="insertMenu" parameterType="com.skn.admin.site.dto.AdminMenu" useGeneratedKeys="true"
+			keyProperty="menuIndex" keyColumn="MENU_INDEX">
+		INSERT INTO ADMIN_MENU (
+			UID,
+			MENU_NAME,
+			PARENT_INDEX,
+			DEPTH,
+			MENU_CODE,
+			SORT_ORDER,
+			URL,
+			ROOT_INDEX,
+			IS_DISPLAY,
+			REG_DATE,
+			URL_STRING,
+			DESCRIPTION,
+			ICON,
+			ADMIN_ID,
+			ADMIN_INDEX
+		) VALUES (
+			#{uid},
+			#{menuName},
+			#{parentIndex},
+			#{depth},
+			#{menuCode},
+			#{sortOrder},
+			#{url},
+			#{rootIndex},
+			#{isDisplay},
+			now(),
+			#{urlString},
+			#{description},
+			#{icon},
+			#{adminId},
+			#{adminIndex}
+		)
+	</insert>
+
+	<update id="updateMenu" parameterType="com.skn.admin.site.dto.AdminMenu">
+		UPDATE ADMIN_MENU
+		SET
+			MENU_NAME = #{menuName},
+			PARENT_INDEX = #{parentIndex},
+			DEPTH = #{depth},
+			MENU_CODE = #{menuCode},
+			SORT_ORDER = #{sortOrder},
+			URL = #{url},
+			ROOT_INDEX = #{rootIndex},
+			IS_DISPLAY = #{isDisplay},
+			MOD_DATE = now(),
+			URL_STRING = #{urlString},
+			DESCRIPTION = #{description},
+			ICON = #{icon},
+			ADMIN_ID = #{adminId},
+			ADMIN_INDEX = #{adminIndex}
+		WHERE
+			UID = #{uid}
+	</update>
+
+	<delete id="deleteMenu">
+		DELETE FROM ADMIN_MENU
+		WHERE UID = #{uid}
+	</delete>
+
+	<select id="selectTopMenuList" resultType="com.skn.admin.site.dto.AdminMenu">
+		SELECT
+		    UID,
+			MENU_INDEX,
+			MENU_NAME,
+			PARENT_INDEX,
+			DEPTH,
+			URL,
+			REG_DATE,
+			MENU_CODE,
+			SORT_ORDER,
+			IS_DISPLAY,
+			ROOT_INDEX,
+			URL_STRING,
+			DESCRIPTION,
+			ICON
+		FROM ADMIN_MENU
+		<where>
+			DEPTH = 1
+			<if test="isDisplay != null and isDisplay != ''">
+				AND IS_DISPLAY = #{isDisplay}
+			</if>
+			<if test="parentIndex != null and parentIndex != ''">
+				AND PARENT_INDEX = #{parentIndex}
+			</if>
+			<if test="adminGroupIndex != null and adminGroupIndex !=''">
+				AND MENU_INDEX IN (
+				SELECT ROOT_INDEX
+				FROM ADMIN_MENU AM
+				INNER JOIN ADMIN_GROUP_PERMISSION AP ON AM.MENU_INDEX=AP.MENU_INDEX AND AP.PERMISSION = 'Y'
+				INNER JOIN ADMIN_GROUP AG ON AP.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX AND AG.ADMIN_GROUP_INDEX = #{adminGroupIndex}
+				WHERE AM.DEPTH != 1
+				)
+			</if>
+		</where>
+		ORDER BY SORT_ORDER, MENU_NAME
+	</select>
+
+	<select id="selectAdminMenu" resultType="com.skn.admin.site.dto.AdminMenu">
+		SELECT V.MENU_INDEX, V.PARENT_INDEX, V.ROOT_INDEX, V.MENU_NAME, V.DEPTH, V.LOCATION, V.URL, V.URL_STRING, V.SORT_ORDER, V.MENU_CODE, V.IS_DISPLAY, V.DESCRIPTION, V.ICON
+		FROM VW_ADMIN_MENU V
+		<where>
+			DEPTH <![CDATA[>=]]> #{depth}
+			<if test="url != null and url !=''">
+				AND URL_STRING LIKE CONCAT('%', #{url}, '%')
+			</if>
+		</where>
+		ORDER BY DEPTH DESC
+		LIMIT 1
+	</select>
+
+	<select id="selectLeftMenuList" parameterType="HashMap" resultType="com.skn.admin.site.dto.AdminMenu">
+		SELECT V.MENU_INDEX, V.PARENT_INDEX, V.ROOT_INDEX, V.MENU_NAME, V.DEPTH, V.LOCATION, V.URL, V.URL_STRING, V.SORT_ORDER, V.MENU_CODE, V.IS_DISPLAY, V.TSORT, V.ICON
+		FROM VW_ADMIN_MENU V
+		<where>
+			IS_DISPLAY = #{isDisplay} AND DEPTH <![CDATA[>]]> #{depth}
+			<if test="rootIndex != null and rootIndex != ''">
+				AND ROOT_INDEX = #{rootIndex}
+			</if>
+			<if test="url != null and url != ''">
+				AND ( ROOT_INDEX IN ( SELECT ROOT_INDEX FROM ADMIN_MENU WHERE URL_STRING LIKE CONCAT('%',#{url},';%') ))
+			</if>
+			<if test="adminGroupIndex != null and adminGroupIndex !=''">
+				AND (
+				MENU_INDEX IN (
+				SELECT AM.MENU_INDEX FROM ADMIN_MENU AM INNER JOIN ADMIN_GROUP_PERMISSION AP ON AM.MENU_INDEX=AP.MENU_INDEX AND AP.PERMISSION = 'Y'
+				INNER JOIN ADMIN_GROUP AG ON AP.ADMIN_GROUP_INDEX=AG.ADMIN_GROUP_INDEX AND AG.ADMIN_GROUP_INDEX=#{adminGroupIndex}
+				) OR
+				MENU_INDEX IN (
+				SELECT AM.PARENT_INDEX FROM ADMIN_MENU AM INNER JOIN ADMIN_GROUP_PERMISSION AP ON AM.MENU_INDEX=AP.MENU_INDEX AND AP.PERMISSION = 'Y'
+				INNER JOIN ADMIN_GROUP AG ON AP.ADMIN_GROUP_INDEX=AG.ADMIN_GROUP_INDEX AND AG.ADMIN_GROUP_INDEX=#{adminGroupIndex} AND AM.DEPTH=3
+				)
+				)
+			</if>
+		</where>
+		ORDER BY TSORT
+	</select>
+
+	<select id="isExistByAdminGroupIndexAndUrl" resultType="boolean">
+		SELECT EXISTS (
+			SELECT 1
+			FROM ADMIN_MENU AM
+				INNER JOIN ADMIN_GROUP_PERMISSION AP ON AM.MENU_INDEX=AP.MENU_INDEX AND AP.PERMISSION = 'Y'
+				INNER JOIN ADMIN_GROUP AG ON AP.ADMIN_GROUP_INDEX=AG.ADMIN_GROUP_INDEX AND AG.ADMIN_GROUP_INDEX= #{adminGroupIndex}
+			WHERE AM.URL = #{url}
+		)
+	</select>
+
+	<select id="selectMenuUrlsByPermission" resultType="String">
+		SELECT
+		    URL
+		FROM ADMIN_GROUP_PERMISSION AGP
+				 INNER JOIN ADMIN_MENU AM ON AGP.MENU_INDEX = AM.MENU_INDEX
+		WHERE AGP.ADMIN_GROUP_INDEX = 78
+		AND AGP.PERMISSION = 'Y'
+		ORDER BY AM.DEPTH, AM.SORT_ORDER
+		LIMIT 1
+	</select>
+
+	<!-- 여기서부터 정리본 2024.09.11 by jinstech -->
+
+	<!-- 메뉴 목록을 가져 오는 쿼리 -->
+	<!-- 파라미터 조건에 따라 사용 유무 또는 Depth, Parent 를 지정할 수 있음 -->
+	<!-- 전체 메뉴 / 1 Depth / Left (2 Depth, 3 Depth) -->
+	<select id="selectMenuListForAll" parameterType="map" resultType="com.skn.admin.site.dto.AdminMenu">
+		SELECT
+			TSORT,
+			MENU_INDEX,
+			PARENT_INDEX,
+			ROOT_INDEX,
+			MENU_NAME,
+			DEPTH,
+			LOCATION,
+			LOCATION2,
+			URL,
+			URL_STRING,
+			SORT_ORDER,
+			MENU_CODE,
+			IS_DISPLAY,
+			DESCRIPTION,
+			ICON
+		FROM VW_ADMN_MENU
+	</select>
+</mapper>

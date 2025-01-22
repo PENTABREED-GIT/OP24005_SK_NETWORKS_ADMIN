@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.file.mapper.FileInfoMapper">
+
+    <resultMap id="FileInfoMap" type="com.skn.admin.file.dto.FileInfo" >
+        <result  property="uid"    column="UID" />
+        <result  property="fileIndex"    column="FILE_INDEX" />
+        <result  property="fileName"    column="FILE_NAME" />
+        <result  property="fileExtension"    column="FILE_EXTENSION" />
+        <result  property="fileSize"    column="FILE_SIZE" />
+        <result  property="description"    column="DESCRIPTION" />
+        <result  property="parentUid"    column="PARENT_UID" />
+        <result  property="parentTable"    column="PARENT_TABLE" />
+        <result  property="parentType"    column="PARENT_TYPE" />
+        <result  property="isSecure"    column="IS_SECURE" />
+        <result  property="sortOrder"    column="SORT_ORDER" />
+        <result  property="modDate"    column="MOD_DATE" />
+        <result  property="regDate"    column="REG_DATE" />
+        <result  property="downloadCount"    column="DOWNLOAD_COUNT" />
+    </resultMap>
+
+    <select id="selectFileInfoList" parameterType="hashmap" resultMap="FileInfoMap">
+        SELECT
+            UID,
+            FILE_INDEX,
+            FILE_NAME,
+            FILE_TYPE,
+            FILE_EXTENSION,
+            FILE_SIZE,
+            DESCRIPTION,
+            PARENT_UID,
+            PARENT_TABLE,
+            PARENT_TYPE,
+            IS_SECURE,
+            SORT_ORDER,
+            MOD_DATE,
+            REG_DATE,
+            DOWNLOAD_COUNT
+        FROM FILE
+        <where>
+            <if test="parentUid != null">AND PARENT_UID = #{parentUid}</if>
+            <if test="parentTable != null">AND PARENT_TABLE = #{parentTable}</if>
+            <if test="parentType != null">AND PARENT_TYPE = #{parentType}</if>
+        </where>
+        ORDER BY SORT_ORDER ASC
+    </select>
+
+    <select id="selectFileInfoView" parameterType="hashmap" resultMap="FileInfoMap">
+        SELECT UID,
+               FILE_INDEX,
+               FILE_NAME,
+               FILE_EXTENSION,
+               FILE_SIZE,
+               DESCRIPTION,
+               PARENT_UID,
+               PARENT_TABLE,
+               PARENT_TYPE,
+               IS_SECURE,
+               SORT_ORDER,
+               MOD_DATE,
+               REG_DATE,
+               DOWNLOAD_COUNT
+        FROM FILE
+        WHERE UID = #{uid}
+    </select>
+
+    <select id="selectFileInfoViewApi" parameterType="String" resultMap="FileInfoMap">
+        SELECT UID,
+               FILE_INDEX,
+               FILE_NAME,
+               FILE_EXTENSION,
+               FILE_SIZE,
+               DESCRIPTION,
+               PARENT_UID,
+               PARENT_TABLE,
+               PARENT_TYPE,
+               IS_SECURE,
+               SORT_ORDER,
+               MOD_DATE,
+               REG_DATE,
+               DOWNLOAD_COUNT
+        FROM FILE
+        WHERE PARENT_UID = #{uid}
+    </select>
+
+    <select id="selectFileInfoViewParentUid" parameterType="hashmap" resultMap="FileInfoMap">
+        SELECT UID,
+               FILE_INDEX,
+               FILE_NAME,
+               FILE_EXTENSION,
+               FILE_TYPE,
+               FILE_SIZE,
+               DESCRIPTION,
+               PARENT_UID,
+               PARENT_TABLE,
+               PARENT_TYPE,
+               IS_SECURE,
+               SORT_ORDER,
+               MOD_DATE,
+               REG_DATE,
+               DOWNLOAD_COUNT
+        FROM FILE
+        WHERE PARENT_UID = #{parentUid}
+    </select>
+
+    <select id="getFileInfoParentUidAndType" parameterType="hashmap" resultMap="FileInfoMap">
+        SELECT UID,
+               FILE_INDEX,
+               FILE_NAME,
+               FILE_EXTENSION,
+               FILE_SIZE,
+               DESCRIPTION,
+               PARENT_UID,
+               PARENT_TABLE,
+               PARENT_TYPE,
+               IS_SECURE,
+               SORT_ORDER,
+               MOD_DATE,
+               REG_DATE,
+               DOWNLOAD_COUNT
+        FROM FILE
+        WHERE PARENT_UID = #{parentUid}
+        AND PARENT_TYPE = #{parentType}
+    </select>
+
+    <select id="selectFileInfoListViewParentUid" parameterType="hashmap" resultMap="FileInfoMap">
+        SELECT UID,
+               FILE_INDEX,
+               FILE_NAME,
+               FILE_EXTENSION,
+               FILE_SIZE,
+               DESCRIPTION,
+               PARENT_UID,
+               PARENT_TABLE,
+               PARENT_TYPE,
+               IS_SECURE,
+               SORT_ORDER,
+               MOD_DATE,
+               REG_DATE,
+               DOWNLOAD_COUNT
+        FROM FILE
+        WHERE PARENT_UID = #{parentUid}
+    </select>
+
+    <select id="selectFileUidByParentUidAndFileTableAndParentType" parameterType="String" resultMap="FileInfoMap">
+        SELECT UID,
+               FILE_INDEX,
+               FILE_NAME,
+               FILE_EXTENSION,
+               FILE_TYPE,
+               FILE_SIZE,
+               DESCRIPTION,
+               PARENT_UID,
+               PARENT_TABLE,
+               PARENT_TYPE,
+               IS_SECURE,
+               SORT_ORDER,
+               MOD_DATE,
+               REG_DATE,
+               DOWNLOAD_COUNT
+        FROM FILE
+        WHERE PARENT_UID = #{parentUid} AND PARENT_TABLE = #{parentTable} AND PARENT_TYPE = #{parentType}
+    </select>
+
+    <insert id="insertFileInfo" parameterType="com.skn.admin.file.dto.FileInfo">
+        INSERT INTO FILE (
+             UID,
+             FILE_NAME,
+             FILE_EXTENSION,
+             FILE_TYPE,
+             FILE_SIZE,
+             DESCRIPTION,
+             PARENT_UID,
+             PARENT_TABLE,
+             PARENT_TYPE,
+             IS_SECURE,
+             SORT_ORDER,
+             REG_DATE,
+             MOD_DATE
+            )
+        VALUES (
+                   #{uid},
+                   #{fileName},
+                   #{fileExtension},
+                    #{fileType},
+                   #{fileSize},
+                   #{description},
+                   #{parentUid},
+                   #{parentTable},
+                   #{parentType},
+                   #{isSecure},
+                   #{sortOrder},
+                   now(),
+                   NULL
+               )
+    </insert>
+
+    <delete id="deleteFileInfo" parameterType="HashMap">
+        DELETE FROM FILE
+        <where>
+            <choose>
+                <when test="uid != null and uid != ''">
+                    UID = #{uid}
+                </when>
+                <otherwise>
+                    PARENT_UID = #{parentUid} AND PARENT_TABLE = #{parentTable}
+                </otherwise>
+            </choose>
+        </where>
+    </delete>
+
+    <delete id="deleteFileInfoApi" parameterType="com.skn.admin.file.dto.FileInfo">
+        DELETE FROM FILE
+        <where>
+            <choose>
+                <when test="uid != null and uid != ''">
+                    UID = #{uid}
+                </when>
+                <otherwise>
+                    PARENT_UID = #{parentUid} AND PARENT_TABLE = #{parentTable}
+                </otherwise>
+            </choose>
+        </where>
+    </delete>
+
+    <update id="updateFileInfo" parameterType="com.skn.admin.file.dto.FileInfo">
+        UPDATE FILE
+        <set>
+            <if test="description != null">DESCRIPTION = #{description},  </if>
+            <if test="sortOrder != null and sortOrder != ''">SORT_ORDER = #{sortOrder},  </if>
+            <if test="isSecure != null and isSecure != ''">IS_SECURE = #{isSecure},  </if>
+            <if test="parentIndex != null and parentIndex != ''">PARENT_INDEX = #{parentIndex},  </if>
+            MOD_DATE = now()
+        </set>
+        <where>
+            <choose>
+                <when test='type != null and type.equals("description") and parentUid != null and parentUid !="" and uid != null and uid != ""'>
+                    PARENT_UID = #{parentUid} AND UID = #{uid}
+                </when>
+                <when test="parentUid != null and parentUid !=''">
+                    PARENT_UID = #{parentUid}
+                </when>
+                <otherwise>
+                    UID = #{uid}
+                </otherwise>
+            </choose>
+        </where>
+    </update>
+</mapper>

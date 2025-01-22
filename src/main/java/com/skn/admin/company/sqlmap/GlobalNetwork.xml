@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.company.mapper.GlobalNetworkMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="isEn == 'Y'.toString()">
+                    IS_EN <![CDATA[<>]]> 'N'
+                </when>
+                <otherwise>
+                    IS_KO <![CDATA[<>]]> 'N'
+                </otherwise>
+            </choose>
+            <if test="classification != null and classification != ''">
+                AND CLASSIFICATION = #{classification}
+            </if>
+            <if test="regionNameKo != null and regionNameKo != ''">
+                AND REGION_NAME_KO = #{regionNameKo}
+            </if>
+            <if test="companyName != null and companyName != ''">
+                AND (COMPANY_NAME_KO LIKE CONCAT('%', #{companyName}, '%') OR COMPANY_NAME_EN LIKE CONCAT('%', #{companyName}, '%'))
+            </if>
+            <if test="isOpen == 'Y'.toString()">
+                AND IS_OPEN = 'Y'
+            </if>
+            <if test="isOpen == 'N'.toString()">
+                AND IS_OPEN = 'N'
+            </if>
+        </where>
+    </sql>
+    <select id="selectGlobalNetworkList"
+            parameterType="com.skn.admin.company.dto.request.GlobalNetworkSearchParam"
+            resultType="com.skn.admin.company.dto.GlobalNetwork">
+        SELECT
+            UID, GLOBAL_NETWORK_INDEX, IS_KO, IS_EN, CLASSIFICATION
+            , REGION_NAME_KO, COUNTRY_NAME_KO, COMPANY_NAME_KO, COMPANY_NAME_EN
+            , IS_OPEN
+        FROM GLOBAL_NETWORK
+        <include refid="searchCondition"/>
+        ORDER BY GLOBAL_NETWORK_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectGlobalNetworkListCount"
+            parameterType="com.skn.admin.company.dto.request.GlobalNetworkSearchParam"
+            resultType="int">
+        SELECT
+            COUNT(*)
+        FROM GLOBAL_NETWORK
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectGlobalNetwork" parameterType="string" resultType="com.skn.admin.company.dto.GlobalNetwork">
+        SELECT
+            UID, GLOBAL_NETWORK_INDEX, IS_KO, IS_EN, CLASSIFICATION, REGION_NAME_KO, REGION_NAME_EN
+               , COUNTRY_NAME_KO, COUNTRY_NAME_EN, COMPANY_NAME_KO, COMPANY_NAME_EN
+               , ADDRESS_KO, ADDRESS_EN, PHONE_NO_KO, PHONE_NO_EN
+               , IS_OPEN, LATITUDE, LONGITUDE
+        FROM GLOBAL_NETWORK
+        WHERE UID = #{uid}
+    </select>
+
+    <insert id="insertGlobalNetwork" parameterType="com.skn.admin.company.dto.GlobalNetwork">
+            <!-- useGeneratedKeys="true" keyProperty="globalNetworkIndex" keyColumn="READING_REVIEW_INDEX"> -->
+        INSERT INTO GLOBAL_NETWORK (
+            UID, IS_KO, IS_EN, CLASSIFICATION, REGION_NAME_KO, REGION_NAME_EN
+            , COUNTRY_NAME_KO, COUNTRY_NAME_EN, COMPANY_NAME_KO, COMPANY_NAME_EN
+            , ADDRESS_KO, ADDRESS_EN, PHONE_NO_KO, PHONE_NO_EN
+            , IS_OPEN, LATITUDE, LONGITUDE, ADMIN_INDEX, ADMIN_ID, ADMIN_NAME
+        ) VALUES (
+            #{uid}, #{isKo}, #{isEn}, #{classification}, #{regionNameKo}, #{regionNameEn}
+            , #{countryNameKo}, #{countryNameEn}, #{companyNameKo}, #{companyNameEn}
+            , #{addressKo}, #{addressEn}, #{phoneNoKo}, #{phoneNoEn}
+            , #{isOpen}, #{latitude}, #{longitude}, #{adminIndex}, #{adminId}, #{adminName}
+        )
+    </insert>
+
+    <update id="updateGlobalNetwork" parameterType="com.skn.admin.company.dto.GlobalNetwork">
+        UPDATE GLOBAL_NETWORK
+        SET
+            IS_KO = #{isKo},
+            IS_EN = #{isEn},
+            CLASSIFICATION = #{classification},
+            REGION_NAME_KO = #{regionNameKo},
+            REGION_NAME_EN = #{regionNameEn},
+            COUNTRY_NAME_KO = #{countryNameKo},
+            COUNTRY_NAME_EN = #{countryNameEn},
+            COMPANY_NAME_KO = #{companyNameKo},
+            COMPANY_NAME_EN = #{companyNameEn},
+            ADDRESS_KO = #{addressKo},
+            ADDRESS_EN = #{addressEn},
+            PHONE_NO_KO = #{phoneNoKo},
+            PHONE_NO_EN = #{phoneNoEn},
+            IS_OPEN = #{isOpen},
+            LATITUDE = #{latitude},
+            LONGITUDE = #{longitude},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteGlobalNetwork" parameterType="com.skn.admin.company.dto.GlobalNetwork">
+        DELETE FROM GLOBAL_NETWORK
+        WHERE GLOBAL_NETWORK_INDEX = #{globalNetworkIndex}
+    </delete>
+</mapper>

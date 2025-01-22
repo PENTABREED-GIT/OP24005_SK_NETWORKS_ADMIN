@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.environment.mapper.AdminLoginLogMapper">
+    <select id="selectLoginLogList" parameterType="HashMap" resultType="com.skn.admin.environment.dto.AdminLoginLog">
+        SELECT
+        L.LOG_INDEX,
+        DATE_FORMAT(L.LOGIN_DATE, '%Y-%m-%d %T') as LOGIN_DATE,
+        A.ADMIN_ID,
+        A.ADMIN_NAME,
+        L.IP,
+        L.RESULT,
+        ROW_NUMBER() OVER() AS ROWNUMBER
+        FROM
+        ADMIN_LOGIN_LOG L
+        INNER JOIN ADMIN A ON L.ADMIN_INDEX = A.ADMIN_INDEX
+        <where>
+            <if test="searchAdminId != null and searchAdminId != ''">
+                AND A.ADMIN_ID = #{searchAdminId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND A.ADMIN_ID LIKE CONCAT('%', #{search}, '%')
+            </if>
+            <if test="sdate != null and sdate != ''">
+                AND DATEDIFF(LOGIN_DATE,#{sdate}) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate != null and edate != ''">
+                AND DATEDIFF(LOGIN_DATE,#{edate}) <![CDATA[<=]]> 0
+            </if>
+            <if test="sdate == null or sdate == ''">
+                AND DATEDIFF(LOGIN_DATE, CURDATE()) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate == null or edate == ''">
+                AND DATEDIFF(LOGIN_DATE, CURDATE()) <![CDATA[<=]]> 0
+            </if>
+            <if test="result != null and result != ''">
+                AND L.RESULT LIKE CONCAT('%', #{result})
+            </if>
+        </where>
+        ORDER BY LOG_INDEX DESC
+        LIMIT #{limit} OFFSET #{offset};
+    </select>
+
+    <insert id="insertLoginLog" parameterType="com.skn.admin.environment.dto.AdminLoginLog">
+        INSERT INTO ADMIN_LOGIN_LOG
+            (ADMIN_INDEX, ADMIN_ID, LOGIN_DATE, IP, RESULT)
+        VALUES (
+                #{adminIndex}
+               , #{adminId}
+               , NOW()
+               , #{ip}
+               , #{result}
+               )
+    </insert>
+
+    <select id="selectLoginLogCount" parameterType="HashMap" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        ADMIN_LOGIN_LOG L
+        INNER JOIN ADMIN A ON L.ADMIN_INDEX = A.ADMIN_INDEX
+        <where>
+            <if test="searchAdminId != null and searchAdminId != ''">
+                AND A.ADMIN_ID = #{searchAdminId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND A.ADMIN_ID LIKE CONCAT('%', #{search}, '%')
+            </if>
+            <if test="sdate != null and sdate != ''">
+                AND DATEDIFF(LOGIN_DATE,#{sdate}) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate != null and edate != ''">
+                AND DATEDIFF(LOGIN_DATE,#{edate}) <![CDATA[<=]]> 0
+            </if>
+            <if test="sdate == null or sdate == ''">
+                AND DATEDIFF(LOGIN_DATE, CURDATE()) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate == null or edate == ''">
+                AND DATEDIFF(LOGIN_DATE, CURDATE()) <![CDATA[<=]]> 0
+            </if>
+            <if test="result != null and result != ''">
+                AND L.RESULT = #{result}
+            </if>
+        </where>
+    </select>
+</mapper>

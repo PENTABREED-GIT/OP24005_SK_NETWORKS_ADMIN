@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.environment.mapper.AdminMapper">
+
+    <select id="selectAdminIdCount" resultType="Integer">
+        SELECT  COUNT(1)
+        FROM    ADMIN
+        WHERE   IS_USE = 'Y'
+        AND     ADMIN_ID = #{adminId}
+    </select>
+
+    <select id="selectAdminEmailCount" resultType="Integer">
+        SELECT  COUNT(1)
+        FROM    ADMIN
+        WHERE   IS_USE = 'Y'
+        AND     EMAIL = #{adminEmail}
+    </select>
+
+    <insert id="insertAdmin" parameterType="com.skn.admin.environment.dto.Admin">
+        INSERT INTO ADMIN
+        (
+            UID,
+            ADMIN_GROUP_INDEX,
+            ADMIN_ID,
+            ADMIN_PW,
+            ADMIN_NAME,
+
+            DEPARTMENT,
+            DUTY,
+            EMAIL,
+            REG_DATE,
+            ADMIN_TYPE,
+
+            REG_ADMIN_INDEX,
+            REG_ADMIN_ID,
+            IP,
+            PW_MOD_DATE,
+            NEXT_PW_MOD_DATE,
+
+            LAST_LOGIN_DATE
+        )
+        VALUES
+        (
+            #{uid},
+            #{adminGroupIndex},
+            #{adminId},
+            #{adminPw},
+            #{adminName},
+
+            #{department},
+            #{duty},
+            #{email},
+            now(),
+            #{adminType},
+
+            #{regAdminIndex},
+            #{regAdminId},
+            #{ip},
+            now(),
+            DATE_ADD(now(), INTERVAL #{nextPwModDate} DAY),
+
+            now()
+        )
+    </insert>
+
+    <update id="updateAdmin" parameterType="com.skn.admin.environment.dto.Admin">
+        UPDATE  ADMIN
+        SET
+            ADMIN_NAME = #{adminName},
+            DEPARTMENT = #{department},
+            DUTY = #{duty},
+            EMAIL = #{email},
+            MOD_DATE = now()
+            <if test="adminPw != null and adminPw != '' ">
+                ,ADMIN_PW = #{adminPw}
+                ,PW_MOD_DATE = now()
+                ,LOGIN_FAIL_COUNT = 0
+            </if>
+            <if test="ip != null and ip != '' ">
+                ,IP = #{ip}
+            </if>
+            <if test="adminGroupIndex != null and adminGroupIndex != '' ">
+                ,ADMIN_GROUP_INDEX = #{adminGroupIndex}
+            </if>
+            <if test="isUse != null and isUse != '' ">
+                ,IS_USE = #{isUse}
+            </if>
+            WHERE   UID = #{uid}
+    </update>
+
+    <select id="selectAdmin" parameterType="String" resultType="com.skn.admin.environment.dto.Admin">
+        SELECT
+        AD.UID,
+        AD.ADMIN_INDEX,
+        AD.ADMIN_GROUP_INDEX,
+        AD.ADMIN_PW,
+        AD.ADMIN_ID,
+        AD.ADMIN_NAME,
+        AD.DEPARTMENT,
+        AD.DUTY,
+        AD.EMAIL,
+        AD.PW_MOD_DATE,
+        AD.MOD_DATE,
+        AD.REG_DATE,
+        AD.IS_USE,
+        AG.GROUP_NAME,
+        AD.IP,
+        AD.ADMIN_TYPE
+        FROM ADMIN AD INNER JOIN ADMIN_GROUP AG ON AD.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX
+        <where>
+            <if test="uid != null and uid != ''">
+                AD.UID = #{uid}
+            </if>
+        </where>
+        ORDER BY REG_DATE
+    </select>
+
+    <select id="selectAdminById" parameterType="String" resultType="com.skn.admin.environment.dto.Admin">
+        SELECT
+            AD.UID,
+            AD.ADMIN_INDEX,
+            AD.ADMIN_GROUP_INDEX,
+            AD.ADMIN_PW,
+            AD.ADMIN_ID,
+
+            AD.ADMIN_NAME,
+            AD.DEPARTMENT,
+            AD.DUTY,
+            AD.EMAIL,
+            AD.LAST_LOGIN_DATE,
+
+            AD.PW_MOD_DATE,
+            AD.NEXT_PW_MOD_DATE,
+            AD.MOD_DATE,
+            AD.REG_DATE,
+            AD.IS_USE,
+            AD.LOGIN_FAIL_COUNT,
+
+            AG.GROUP_NAME,
+            AD.IP,
+            AD.ADMIN_TYPE
+        FROM
+            ADMIN AD
+            INNER JOIN ADMIN_GROUP AG ON
+                AD.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX
+        <where>
+            AD.ADMIN_ID = #{adminId}
+        </where>
+        ORDER BY
+            REG_DATE
+    </select>
+
+    <select id="selectAdminList" parameterType="map" resultType="com.skn.admin.environment.dto.Admin">
+        SELECT
+            AD.UID,
+            AD.ADMIN_ID,
+            AD.ADMIN_NAME,
+            AD.DEPARTMENT,
+            AG.ADMIN_GROUP_INDEX,
+            AG.GROUP_NAME,
+            DATE_FORMAT(AD.LAST_LOGIN_DATE,'%Y-%m-%d %H:%i') AS LAST_LOGIN_DATE,
+            AD.IS_USE
+        FROM ADMIN AD INNER JOIN ADMIN_GROUP AG on AD.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX
+        <where>
+            <if test="sWord != null and sWord != '' ">
+                AND (AD.ADMIN_ID LIKE CONCAT('%', #{sWord}, '%') OR AD.ADMIN_NAME LIKE CONCAT('%', #{sWord}, '%') )
+            </if>
+            <if test="sDate != null and sDate != '' ">
+                AND LAST_LOGIN_DATE <![CDATA[>=]]> #{sDate}
+            </if>
+            <if test="eDate != null and eDate != '' ">
+                AND AD.LAST_LOGIN_DATE <![CDATA[<=]]> #{eDate}
+            </if>
+            <if test="adminGroupIndex != null and adminGroupIndex != '' ">
+                AND AD.ADMIN_GROUP_INDEX = #{adminGroupIndex}
+            </if>
+            <if test="isUse != null and isUse != '' ">
+                AND AD.IS_USE = #{isUse}
+            </if>
+        </where>
+        ORDER BY AD.REG_DATE
+        LIMIT #{limit} OFFSET #{offset};
+    </select>
+
+    <select id="selectAdminTotalCount" parameterType="map" resultType="Integer">
+        SELECT count(*)
+            FROM ADMIN AD INNER JOIN ADMIN_GROUP AG on AD.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX
+        <where>
+            <if test="sWord != null and sWord != '' ">
+                AND (AD.ADMIN_ID LIKE CONCAT('%', #{sWord}, '%') OR AD.ADMIN_NAME LIKE CONCAT('%', #{sWord}, '%') )
+            </if>
+            <if test="sDate != null and sDate != '' ">
+                AND LAST_LOGIN_DATE <![CDATA[>=]]> #{sDate}
+            </if>
+            <if test="eDate != null and eDate != '' ">
+                AND AD.LAST_LOGIN_DATE <![CDATA[<=]]> #{eDate}
+            </if>
+            <if test="adminGroupIndex != null and adminGroupIndex != '' ">
+                AND AD.ADMIN_GROUP_INDEX = #{adminGroupIndex}
+            </if>
+            <if test="isUse != null and isUse != '' ">
+                AND AD.IS_USE = #{isUse}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertAdminSession" parameterType="map">
+        INSERT INTO ADMIN_SESSION (ADMIN_INDEX, SESSION_TOKEN, TOKEN_DATE, REG_DATE)
+        VALUES (#{adminIndex}, #{sessionToken}, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE
+                                 SESSION_TOKEN = VALUES(SESSION_TOKEN),
+                                 TOKEN_DATE = VALUES(TOKEN_DATE),
+                                 REG_DATE = VALUES(REG_DATE);
+    </insert>
+
+    <select id="selectAdminSessionToken" parameterType="map" resultType="String">
+        SELECT
+            SESSION_TOKEN
+        FROM
+            ADMIN_SESSION
+        WHERE
+            ADMIN_INDEX = #{adminIndex}
+    </select>
+
+    <delete id="deleteAdminSession" parameterType="map">
+        DELETE
+        FROM ADMIN_SESSION
+        WHERE ADMIN_INDEX = #{adminIndex}
+    </delete>
+
+    <delete id="deleteAdmin" parameterType="String">
+        DELETE FROM ADMIN WHERE UID = #{uid}
+    </delete>
+
+</mapper>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.customer.mapper.InquiryMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="lang != 'EN'.toString()">
+                    LANG='KO'
+                </when>
+                <otherwise>
+                    LANG='EN'
+                </otherwise>
+            </choose>
+            <if test="dateType != null and dateType != ''">
+                <if test="dateType == 'REG_DATE'.toString()">
+                    <if test="startDate != null">
+                        AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+                    </if>
+                    <if test="endDate != null">
+                      AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+                    </if>
+                </if>
+                <if test="dateType == 'ANSWER_DATE'.toString()">
+                    <if test="startDate != null">
+                        AND MOD_DATE <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+                    </if>
+                    <if test="endDate != null">
+                        AND MOD_DATE <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+                    </if>
+                </if>
+            </if>
+            <if test="searchWord != null and searchWord != ''">
+                <if test="searchType == 'NAME'">
+                    AND NAME LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <if test="searchType == 'TITLE'">
+                    AND TITLE LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <if test="searchType == 'ADMIN_NAME'">
+                    AND ADMIN_NAME LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+            </if>
+            <if test="status != null and status != ''">
+                <if test='status.equals("READY")'>
+                    AND STATUS LIKE CONCAT('%', #{status}, '%')
+                </if>
+                <if test='status.equals("ING")'>
+                    AND STATUS LIKE CONCAT('%', #{status}, '%')
+                </if>
+                <if test='status.equals("DONE")'>
+                    AND STATUS LIKE CONCAT('%', #{status}, '%')
+                </if>
+                <if test='status.equals("NOANSWERDONE")'>
+                    AND STATUS LIKE CONCAT('%', #{status}, '%')
+                </if>
+            </if>
+            <choose>
+                <when test="classification == 'proposal'.toString()">
+                    AND CLASSIFICATION = 'proposal'
+                </when>
+                <when test="classification == 'inquiry'.toString()">
+                    AND CLASSIFICATION = 'inquiry'
+                </when>
+                <otherwise>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+    <select id="selectInquiryList" parameterType="com.skn.admin.customer.dto.request.InquirySearchParam" resultType="com.skn.admin.customer.dto.Inquiry">
+        SELECT
+        I.UID,
+        I.NAME,
+        I.CLASSIFICATION,
+        I.TITLE,
+        I.REG_DATE,
+        I.STATUS,
+        I.ADMIN_ID,
+        I.ADMIN_NAME,
+        I.MOD_DATE AS ANSWER_DATE
+        FROM INQUIRY I
+        <include refid="searchCondition"/>
+        ORDER BY I.INQUIRY_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectInquiryListCount" parameterType="com.skn.admin.customer.dto.request.InquirySearchParam" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM INQUIRY I
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectInquiry" parameterType="string" resultType="com.skn.admin.customer.dto.Inquiry">
+        SELECT I.UID
+             , I.INQUIRY_INDEX
+             , I.NAME
+             , I.EMAIL
+             , I.CLASSIFICATION
+             , I.ETC_INFO
+             , I.TITLE
+             , I.STATUS
+             , I.CONTENT
+        FROM INQUIRY I
+        WHERE UID = #{uid}
+    </select>
+
+    <select id="selectInquiryAnswer" parameterType="string" resultType="com.skn.admin.customer.dto.Inquiry">
+        SELECT IA.ADMIN_NAME
+             , IA.ANSWER_TITLE
+             , IA.ANSWER_CONTENT
+             , IA.REG_DATE
+        FROM INQUIRY_ANSWER IA
+        LEFT JOIN INQUIRY I ON I.INQUIRY_INDEX = IA.INQUIRY_INDEX
+        WHERE I.UID = #{uid}
+    </select>
+
+    <insert id="insertAnswer" parameterType="com.skn.admin.customer.dto.Inquiry" useGeneratedKeys="true" keyProperty="inquiryAnswerIndex" keyColumn="INQUIRY_ANSWER_INDEX">
+        INSERT INTO INQUIRY_ANSWER (
+        UID, INQUIRY_INDEX, ANSWER_TITLE, ANSWER_CONTENT, ADMIN_INDEX, ADMIN_ID, ADMIN_NAME, REG_DATE
+        ) VALUES (
+        #{uid}, #{inquiryIndex}, #{answerTitle}, #{answerContent}, #{adminIndex}, #{adminId}, #{adminName}, NOW()
+        )
+        <selectKey keyProperty="inquiryIndex" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="updateInquiry" parameterType="com.skn.admin.customer.dto.Inquiry">
+        UPDATE INQUIRY
+        SET
+            STATUS = #{status},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <update id="updateInquiryStatus" parameterType="com.skn.admin.customer.dto.Inquiry">
+        UPDATE INQUIRY
+        SET
+            STATUS = #{status},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteInquiry" parameterType="com.skn.admin.customer.dto.Inquiry">
+        DELETE FROM INQUIRY
+        WHERE UID = #{uid}
+    </delete>
+
+    <delete id="deleteOver1yearInquiry">
+        DELETE FROM INQUIRY
+        WHERE REG_DATE <![CDATA[<=]]> DATE_SUB(NOW(), INTERVAL 1 YEAR);
+    </delete>
+</mapper>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.ir.mapper.AnnouncementMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="lang != 'EN'.toString()">
+                    LANG='KO'
+                </when>
+                <otherwise>
+                    LANG='EN'
+                </otherwise>
+            </choose>
+            <if test="startDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+            </if>
+            <if test="endDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+            </if>
+            <if test="searchWord != null and searchWord != ''">
+                <if test="searchType == 'TITLE'">
+                    AND TITLE LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <if test="searchType == 'ADMINNAME'">
+                    AND ADMIN_NAME=#{searchWord}
+                </if>
+            </if>
+            <if test="isOpen == 'Y'.toString()">
+                AND IS_OPEN = 'Y'
+            </if>
+            <if test="isOpen == 'N'.toString()">
+                AND IS_OPEN = 'N'
+            </if>
+            <if test="isTop == 'Y'.toString()">
+                AND IS_TOP = 'Y'
+            </if>
+            <if test="isTop == 'N'.toString()">
+                AND IS_TOP = 'N'
+            </if>
+        </where>
+    </sql>
+    <select id="selectAnnouncementList"
+            parameterType="com.skn.admin.ir.dto.request.AnnouncementSearchParam"
+            resultType="com.skn.admin.ir.dto.Announcement">
+        SELECT
+            UID, ANNOUNCEMENT_INDEX, IS_TOP, LANG
+            , TITLE
+            , IS_OPEN, DATE_FORMAT(REG_DATE, '%Y-%m-%d') AS REG_DATE
+            , ADMIN_NAME
+        FROM ANNOUNCEMENT
+        <include refid="searchCondition"/>
+        ORDER BY ANNOUNCEMENT_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectAnnouncementListCount"
+            parameterType="com.skn.admin.ir.dto.request.AnnouncementSearchParam"
+            resultType="int">
+        SELECT
+            COUNT(*)
+        FROM ANNOUNCEMENT
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectAnnouncement" parameterType="string" resultType="com.skn.admin.ir.dto.Announcement">
+        SELECT
+            UID, ANNOUNCEMENT_INDEX, CONTENT, TITLE, IS_TOP, OPEN_DATE
+           , LANG , IS_OPEN
+        FROM ANNOUNCEMENT
+        WHERE UID = #{uid}
+    </select>
+
+    <insert id="insertAnnouncement" parameterType="com.skn.admin.ir.dto.Announcement">
+        INSERT INTO ANNOUNCEMENT (
+            UID, CONTENT, IS_TOP, TITLE, OPEN_DATE
+            , LANG, IS_OPEN
+            , ADMIN_INDEX, ADMIN_ID, ADMIN_NAME
+        ) VALUES (
+            #{uid}, #{content}, #{isTop}, #{title}, #{openDate}
+            , #{lang}, #{isOpen}
+            , #{adminIndex}, #{adminId}, #{adminName}
+        )
+        <selectKey keyProperty="announcementIndex" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="updateAnnouncement" parameterType="com.skn.admin.ir.dto.Announcement">
+        UPDATE ANNOUNCEMENT
+        SET
+            CONTENT = #{content},
+            IS_TOP = #{isTop},
+            TITLE = #{title},
+            OPEN_DATE = #{openDate},
+            LANG = #{lang},
+            IS_OPEN = #{isOpen},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteAnnouncement" parameterType="com.skn.admin.ir.dto.Announcement">
+        DELETE FROM ANNOUNCEMENT
+        WHERE ANNOUNCEMENT_INDEX = #{announcementIndex}
+    </delete>
+</mapper>

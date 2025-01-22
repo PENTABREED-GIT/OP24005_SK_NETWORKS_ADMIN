@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.log.mapper.LogMapper">
+    <select id="selectErrorLogList" parameterType="hashmap" resultType="com.skn.admin.log.dto.response.ResponseErrorLogDtoList">
+        SELECT
+        ERROR_LOG_INDEX as errorLogIndex,
+        CODE as code,
+        TITLE as title,
+        PAGE as page,
+        OPTION1 as option1,
+        OPTION2 as option2,
+        OPTION3 as option3,
+        OPTION4 as option4,
+        OPTION5 as option5,
+        TEXT as text,
+        IP_ADDRESS as ip,
+        REG_DATE as regDate
+        FROM ERROR_LOG
+        <where>
+            <if test="search != null and search != ''">
+                AND TITLE LIKE CONCAT('%' ,#{search} , '%')
+            </if>
+        </where>
+        ORDER BY ERROR_LOG_INDEX DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectErrorLogListCount" parameterType="hashmap" resultType="int">
+        SELECT COUNT(*)
+        FROM ERROR_LOG
+        <where>
+            <if test="search != null and search != ''">
+                AND TITLE LIKE CONCAT('%' ,#{search} , '%')
+            </if>
+        </where>
+
+    </select>
+
+    <select id="selectLoginLogList" parameterType="com.skn.admin.log.dto.request.LoginLogSearchParam"
+            resultType="com.skn.admin.log.dto.LoginLog">
+        SELECT
+        AL.LOG_INDEX,
+        AL.ADMIN_INDEX,
+        AL.ADMIN_ID,
+        AL.LOGIN_DATE,
+        AL.IP,
+        AL.RESULT,
+        A.ADMIN_NAME
+        FROM ADMIN_LOGIN_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="type != '' and type != null">
+                AND AL.RESULT = #{type}
+            </if>
+            <if test="startDate != null">
+                AND AL.LOGIN_DATE  <![CDATA[>=]]>  #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND AL.LOGIN_DATE <![CDATA[<=]]> #{endDate}
+            </if>
+            <if test="searchWord != '' and searchWord != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{searchWord}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{searchWord}, '%') OR AL.IP LIKE CONCAT('%', #{searchWord}, '%'))
+            </if>
+        </where>
+        ORDER BY AL.LOG_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectLoginLogListCount" parameterType="com.skn.admin.log.dto.request.LoginLogSearchParam" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM ADMIN_LOGIN_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="type != '' and type != null">
+                AND AL.RESULT = #{type}
+            </if>
+            <if test="startDate != null">
+                AND AL.LOGIN_DATE  <![CDATA[>=]]>  #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND AL.LOGIN_DATE <![CDATA[<=]]> #{endDate}
+            </if>
+            <if test="searchWord != '' and searchWord != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{searchWord}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{searchWord}, '%') OR AL.IP LIKE CONCAT('%', #{searchWord}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="selectUseLogList" parameterType="com.skn.admin.log.dto.request.ActionLogSearchParam" resultType="com.skn.admin.log.dto.ActionLog">
+        SELECT
+        AL.UID,
+        AL.DETAIL,
+        AL.ACTION_TYPE,
+        AL.ADMIN_ID,
+        A.ADMIN_NAME,
+        AL.IP,
+        AL.REG_DATE
+        FROM ADMIN_ACTION_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="actionType == 'PUT'">
+                AND (AL.ACTION_TYPE = 'PUT' OR AL.ACTION_TYPE = 'PATCH')
+            </if>
+            <if test="actionType != 'PUT' and actionType != '' and actionType != null">
+                AND AL.ACTION_TYPE = #{actionType}
+            </if>
+            <if test="startDate != '' and startDate != null">
+                AND AL.LOGIN_DATE  <![CDATA[ >= ]]>  #{startDate}
+            </if>
+            <if test="endDate != '' and endDate != null">
+                AND AL.LOGIN_DATE <![CDATA[<=]]> #{endDate}
+            </if>
+            <if test="searchWord != '' and searchWord != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{searchWord}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{searchWord}, '%') OR AL.IP LIKE CONCAT('%', #{searchWord}, '%'))
+            </if>
+        </where>
+        ORDER BY AL.ADMIN_ACTION_LOG_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectUseLogListCount" parameterType="map" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM ADMIN_ACTION_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="actionType == 'PUT'">
+                AND (AL.ACTION_TYPE = 'PUT' OR AL.ACTION_TYPE = 'PATCH')
+            </if>
+            <if test="actionType != 'PUT' and actionType != '' and type != null">
+                AND AL.ACTION_TYPE = #{actionType}
+            </if>
+            <if test="startDate != null">
+                AND AL.REG_DATE  <![CDATA[ >= ]]>  #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND AL.REG_DATE <![CDATA[ <= ]]> #{endDate}
+            </if>
+            <if test="searchWord != '' and searchWord != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{searchWord}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{searchWord}, '%') OR AL.IP LIKE CONCAT('%', #{searchWord}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAdminGroupLogList" parameterType="map" resultType="com.skn.admin.account.dto.AdminGroup">
+        SELECT
+        UID,
+        ADMIN_GROUP_LOG_INDEX,
+        ADMIN_GROUP_INDEX,
+        GROUP_NAME,
+        DESCRIPTION,
+        REG_DATE,
+        MOD_DATE,
+        ADMIN_ID,
+        ADMIN_INDEX,
+        IS_SUPER,
+        IS_USE
+        FROM ADMIN_GROUP_LOG
+        <where>
+            <if test="searchWord != null and searchWord != '' ">
+                AND (GROUP_NAME LIKE CONCAT('%', #{searchWord} ,'%') OR DESCRIPTION LIKE CONCAT('%', #{searchWord} ,'%'))
+            </if>
+            <if test="isUse != null and isUse != ''">
+                AND IS_USE = #{isUse}
+            </if>
+        </where>
+        ORDER BY ADMIN_GROUP_LOG_INDEX DESC
+        <if test="offset != null and offset != '' and size != null and size != '' ">
+            LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <select id="selectAdminGroupLogTotalCount" parameterType="com.skn.admin.account.dto.AdminGroup$AdminGroupSearchParam" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM ADMIN_GROUP_LOG
+        <where>
+            <if test="searchWord != null and searchWord != '' ">
+                AND (GROUP_NAME LIKE CONCAT('%', #{searchWord} ,'%') OR DESCRIPTION LIKE CONCAT('%', #{searchWord} ,'%'))
+            </if>
+            <if test="isUse != null and isUse != ''">
+                AND IS_USE = #{isUse}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAdminGroupLog" parameterType="int" resultType="com.skn.admin.account.dto.AdminGroup">
+        SELECT
+            AG.UID,
+            ADMIN_GROUP_LOG_INDEX,
+            AG.ADMIN_GROUP_INDEX,
+            AG.GROUP_NAME,
+            AG.DESCRIPTION,
+            AG.MOD_DATE,
+            AG.REG_DATE,
+            AG.ADMIN_ID,
+            AG.ADMIN_INDEX,
+            AG.IS_SUPER,
+            AG.IS_USE,
+            AG.IS_MAIN
+        FROM ADMIN_GROUP_LOG AG
+        WHERE AG.ADMIN_GROUP_LOG_INDEX = #{adminGroupLogIndex}
+    </select>
+
+    <select id="selectAdminGroupPermissionLogList" parameterType="int" resultType="com.skn.admin.account.dto.AdminGroupPermission">
+        SELECT
+            VAM.TSORT,
+            VAM.MENU_INDEX,
+            VAM.PARENT_INDEX,
+            VAM.ROOT_INDEX,
+            VAM.MENU_NAME,
+            VAM.DEPTH,
+            VAM.LOCATION,
+            VAM.LOCATION2,
+            VAM.URL,
+            VAM.URL_STRING,
+            VAM.SORT_ORDER,
+            VAM.MENU_CODE,
+            VAM.IS_DISPLAY,
+            VAM.DESCRIPTION,
+            VAM.ICON,
+
+            AGP.ADMIN_GROUP_INDEX
+        FROM VW_ADMIN_MENU VAM
+                 LEFT OUTER JOIN ADMIN_GROUP_PERMISSION_LOG AGP ON VAM.MENU_INDEX = AGP.MENU_INDEX AND AGP.ADMIN_GROUP_LOG_INDEX = #{adminGroupLogIndex}
+        WHERE VAM.IS_DISPLAY = 'Y'
+        ORDER BY TSORT
+    </select>
+</mapper>

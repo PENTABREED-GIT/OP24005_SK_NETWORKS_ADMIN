@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.sample.mapper.TestMapper">
+
+	<select id="getList" parameterType="com.skn.admin.sample.dto.DecodeValue" resultType="com.skn.admin.sample.dto.DecodeValue">
+		SELECT * FROM skn_inquiry2
+	</select>
+
+	<select id="getList2" parameterType="com.skn.admin.sample.dto.DecodeValue" resultType="com.skn.admin.sample.dto.DecodeValue">
+		SELECT
+		       INQ_IDX
+		     , INQ_TIT
+		     , INQ_CON
+		     , INQ_OFF_NAM
+
+			, CASE INQ_COU_COD WHEN 'E' THEN 'EN' WHEN 'K' THEN 'KO' END AS LANG
+		FROM SKN_INQUIRY20230912
+	</select>
+	
+	<insert id="insert" parameterType="com.skn.admin.sample.dto.DecodeValue">
+	
+	INSERT INTO SKN_INQUIRY20230912(
+			INQ_IDX
+    		, INQ_TIT
+			, INQ_CON
+			, INQ_OFF_NAM
+			, INQ_NAM
+			, INQ_EMA
+			, INQ_TEL
+			, INQ_REG
+			, INQ_UPD
+			, INQ_TYP
+			, INQ_COD_IDX
+			, INQ_COU_COD
+			, INQ_AGREE1
+			, INQ_REP_IDX
+			, INQ_PAR_IDX
+    	) VALUES(
+    		#{inqIdx}
+    		, #{inqTit}
+			, #{inqCon}
+			, #{inqOffNam}
+			, #{inqNam}
+			, #{inqEma}
+			, #{inqTel}
+			, #{inqReg}
+			, #{inqUpd}
+			, #{inqTyp}
+			, #{inqCouIdx}
+			, #{inqCouCod}
+			, #{inqAgree1}
+			, #{inqRepIdx}
+			, #{inqParIdx}
+    	)
+	
+	
+	
+	</insert>
+
+	<insert id="insertInquiry" parameterType="com.skn.admin.customer.dto.Inquiry">
+		insert into INQUIRY (
+			UID, INQUIRY_INDEX, LANG, TITLE, CONTENT, EMAIL, NAME, ETC_INFO, CLASSIFICATION, STATUS, MOD_DATE, REG_DATE
+		) values (
+		    #{uid}, #{inquiryIndex}, #{lang}, #{title}, #{content}, #{email}, #{name}, #{etcInfo}, #{classification}, #{status},#{modDate}, #{regDate}
+		);
+	</insert>
+	<select id="selectInquiryOld" resultType="com.skn.admin.sample.dto.DecodeValue">
+		SELECT
+			Q.INQ_IDX
+			, CASE Q.INQ_COU_COD WHEN 'E' THEN 'EN' WHEN 'K' THEN 'KO' END AS INQ_COU_COD
+			, Q.INQ_TIT
+			, Q.INQ_CON
+		    , Q.INQ_NAM
+			, Q.INQ_EMA
+			, Q.INQ_OFF_NAM
+			, Q.INQ_TEL
+			, CASE Q.INQ_TYP WHEN 'C' THEN 'inquiry' WHEN 'B' THEN 'proposal' END AS INQ_TYP
+			, CASE WHEN A.INQ_TIT IS NULL THEN 'ING' ELSE 'DONE' END AS INQ_IP -- ip 필드 임시 사용
+			, Q.INQ_UPD
+			, Q.INQ_REG
+		FROM SKN_INQUIRY20230912 Q
+			LEFT OUTER JOIN SKN_INQUIRY20230912 A ON Q.INQ_IDX=A.INQ_PAR_IDX AND A.INQ_REP_IDX=1
+		WHERE Q.INQ_REP_IDX=0 AND Q.INQ_IDX=Q.INQ_PAR_IDX
+		AND DATE_FORMAT(Q.INQ_REG, 'YYYY-MM-DD')>'2023-09-23'
+		ORDER BY Q.INQ_IDX ASC
+	</select>
+</mapper>

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.account.mapper.AdminGroupMapper">
+    <select id="selectAdminGroupList" parameterType="com.skn.admin.account.dto.AdminGroup$AdminGroupSearchParam" resultType="com.skn.admin.account.dto.AdminGroup">
+        SELECT
+            UID,
+            ADMIN_GROUP_INDEX,
+            GROUP_NAME,
+            DESCRIPTION,
+            REG_DATE,
+            MOD_DATE,
+            ADMIN_ID,
+            ADMIN_INDEX,
+            IS_SUPER,
+            IS_USE
+        FROM ADMIN_GROUP
+        <where>
+            <if test="searchWord != null and searchWord != '' ">
+                AND (GROUP_NAME LIKE CONCAT('%', #{searchWord} ,'%') OR DESCRIPTION LIKE CONCAT('%', #{searchWord} ,'%'))
+            </if>
+            <if test="isUse != null and isUse != ''">
+                AND IS_USE = #{isUse}
+            </if>
+        </where>
+        ORDER BY ADMIN_GROUP_INDEX DESC
+        <if test="offset != null and offset != '' and size != null and size != '' ">
+        LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <select id="selectAdminGroupTotalCount" parameterType="com.skn.admin.account.dto.AdminGroup$AdminGroupSearchParam" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM ADMIN_GROUP
+        <where>
+            <if test="searchWord != null and searchWord != '' ">
+                AND (GROUP_NAME LIKE CONCAT('%', #{searchWord} ,'%') OR DESCRIPTION LIKE CONCAT('%', #{searchWord} ,'%'))
+            </if>
+            <if test="isUse != null and isUse != ''">
+                AND IS_USE = #{isUse}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAdminGroupPermissionList" parameterType="int" resultType="com.skn.admin.account.dto.AdminGroupPermission">
+        SELECT
+            VAM.TSORT,
+            VAM.MENU_INDEX,
+            VAM.PARENT_INDEX,
+            VAM.ROOT_INDEX,
+            VAM.MENU_NAME,
+            VAM.DEPTH,
+            VAM.LOCATION,
+            VAM.LOCATION2,
+            VAM.URL,
+            VAM.URL_STRING,
+            VAM.SORT_ORDER,
+            VAM.MENU_CODE,
+            VAM.IS_DISPLAY,
+            VAM.DESCRIPTION,
+            VAM.ICON,
+
+            AGP.ADMIN_GROUP_INDEX
+        FROM VW_ADMIN_MENU VAM
+            LEFT OUTER JOIN ADMIN_GROUP_PERMISSION AGP ON VAM.MENU_INDEX = AGP.MENU_INDEX AND AGP.ADMIN_GROUP_INDEX = #{adminGroupIndex}
+        WHERE VAM.IS_DISPLAY = 'Y'
+        ORDER BY TSORT
+    </select>
+
+    <select id="selectAdminMenuListAllForGroup" resultType="com.skn.admin.account.dto.AdminGroupPermission">
+        SELECT
+            VAM.TSORT,
+            VAM.MENU_INDEX,
+            VAM.PARENT_INDEX,
+            VAM.ROOT_INDEX,
+            VAM.MENU_NAME,
+            VAM.DEPTH,
+            VAM.LOCATION,
+            VAM.LOCATION2,
+            VAM.URL,
+            VAM.URL_STRING,
+            VAM.SORT_ORDER,
+            VAM.MENU_CODE,
+            VAM.IS_DISPLAY,
+            VAM.DESCRIPTION,
+            VAM.ICON
+        FROM VW_ADMIN_MENU VAM
+        WHERE VAM.IS_DISPLAY = 'Y'
+        ORDER BY TSORT
+    </select>
+
+    <insert id="insertAdminGroup" parameterType="com.skn.admin.account.dto.AdminGroup" useGeneratedKeys="true"
+            keyProperty="adminGroupIndex" keyColumn="ADMIN_GROUP_INDEX">
+        INSERT INTO ADMIN_GROUP
+        (
+            UID,
+            GROUP_NAME,
+            DESCRIPTION,
+            REG_DATE,
+            ADMIN_ID,
+            ADMIN_INDEX,
+            IS_USE,
+            IS_SUPER,
+            IS_MAIN
+        )
+        VALUES
+            (
+                #{uid},
+                #{groupName},
+                #{description},
+                NOW(),
+                #{adminId},
+                #{adminIndex},
+                #{isUse},
+                #{isSuper},
+                #{isMain}
+            )
+    </insert>
+
+    <insert id="insertAdminGroupPermission" parameterType="com.skn.admin.account.dto.AdminGroup">
+        DELETE FROM ADMIN_GROUP_PERMISSION WHERE ADMIN_GROUP_INDEX = #{adminGroupIndex};
+        INSERT INTO ADMIN_GROUP_PERMISSION
+        (
+            ADMIN_GROUP_INDEX,
+            ADMIN_ID,
+            ADMIN_INDEX,
+            PERMISSION,
+            REG_DATE,
+            MENU_INDEX
+        )
+        VALUES
+        (
+        <foreach item="item" collection="adminGroupPermissionList" separator="),(">
+            #{adminGroupIndex},
+            #{adminId},
+            #{adminIndex},
+            'Y',
+            now(),
+            #{item.menuIndex}
+        </foreach>
+        );
+    </insert>
+
+    <update id="updateAdminGroup" parameterType="com.skn.admin.account.dto.AdminGroup">
+        UPDATE  ADMIN_GROUP
+        SET     GROUP_NAME = #{groupName},
+                DESCRIPTION = #{description},
+                IS_USE = #{isUse},
+                IS_MAIN = #{isMain},
+                MOD_DATE = now(),
+                ADMIN_ID = #{adminId},
+                ADMIN_INDEX = #{adminIndex}
+        WHERE   UID = #{uid}
+    </update>
+
+    <insert id="insertAdminGroupLog" parameterType="com.skn.admin.account.dto.AdminGroup" useGeneratedKeys="true"
+            keyProperty="adminGroupLogIndex" keyColumn="ADMIN_GROUP_LOG_INDEX">
+        INSERT INTO ADMIN_GROUP_LOG
+        (
+            UID,
+            ADMIN_GROUP_INDEX,
+            GROUP_NAME,
+            DESCRIPTION,
+            REG_DATE,
+            ADMIN_ID,
+            ADMIN_INDEX,
+            IS_USE,
+            IS_SUPER,
+            IS_MAIN
+        )
+        VALUES
+            (
+                #{uid},
+                #{adminGroupIndex},
+                #{groupName},
+                #{description},
+                NOW(),
+                #{adminId},
+                #{adminIndex},
+                #{isUse},
+                #{isSuper},
+                #{isMain}
+            )
+    </insert>
+
+    <insert id="insertAdminGroupPermissionLog" parameterType="com.skn.admin.account.dto.AdminGroup">
+        INSERT INTO ADMIN_GROUP_PERMISSION_LOG
+        (
+            ADMIN_GROUP_LOG_INDEX,
+            ADMIN_GROUP_INDEX,
+            ADMIN_ID,
+            ADMIN_INDEX,
+            REG_DATE,
+            MENU_INDEX
+        )
+        VALUES
+        (
+        <foreach item="item" collection="adminGroupPermissionList" separator="),(">
+            #{adminGroupLogIndex},
+            #{adminGroupIndex},
+            #{adminId},
+            #{adminIndex},
+            now(),
+            #{item.menuIndex}
+        </foreach>
+        )
+    </insert>
+
+    <select id="selectAdminGroup" parameterType="map" resultType="com.skn.admin.account.dto.AdminGroup">
+        SELECT
+            AG.UID,
+            AG.ADMIN_GROUP_INDEX,
+            AG.GROUP_NAME,
+            AG.DESCRIPTION,
+            AG.MOD_DATE,
+            AG.REG_DATE,
+            AG.ADMIN_ID,
+            AG.ADMIN_INDEX,
+            AG.IS_SUPER,
+            AG.IS_USE,
+            AG.IS_MAIN
+        FROM ADMIN_GROUP AG INNER JOIN ADMIN AD ON AG.ADMIN_INDEX = AD.ADMIN_INDEX
+        WHERE AG.UID = #{uid}
+    </select>
+
+    <select id="isExistAdminGroupByGroupName" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1
+        FROM ADMIN_GROUP
+        <where>
+            AND GROUP_NAME = #{groupName}
+            <if test="uid != null and uid != '' ">
+                AND UID != #{uid}
+            </if>
+        </where>
+        )
+    </select>
+
+    <select id="isUseAdminGroup" resultType="boolean">
+        SELECT EXISTS (
+            SELECT count(A.ADMIN_INDEX)
+            FROM ADMIN_GROUP AG
+                     INNER JOIN ADMIN A ON A.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX
+            WHERE AG.UID = #{uid}
+            GROUP BY AG.ADMIN_GROUP_INDEX
+        )
+    </select>
+</mapper>

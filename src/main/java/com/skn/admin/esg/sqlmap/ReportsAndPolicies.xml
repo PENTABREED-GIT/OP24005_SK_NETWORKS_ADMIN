@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.esg.mapper.ReportsAndPoliciesMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="lang != 'EN'.toString()">
+                    LANG='KO'
+                </when>
+                <otherwise>
+                    LANG='EN'
+                </otherwise>
+            </choose>
+            <if test="startDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+            </if>
+            <if test="endDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+            </if>
+            <if test="searchWord != null and searchWord != ''">
+                <if test="searchType == 'TITLE'">
+                    AND TITLE LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <if test="searchType == 'ADMINNAME'">
+                    AND ADMIN_NAME=#{searchWord}
+                </if>
+            </if>
+            <if test="isOpen == 'Y'.toString()">
+                AND IS_OPEN = 'Y'
+            </if>
+            <if test="isOpen == 'N'.toString()">
+                AND IS_OPEN = 'N'
+            </if>
+        </where>
+    </sql>
+    <select id="selectReportsAndPoliciesList"
+            parameterType="com.skn.admin.esg.dto.request.ReportsAndPoliciesSearchParam"
+            resultType="com.skn.admin.esg.dto.ReportsAndPolicies">
+        SELECT
+            UID, REPORTS_AND_POLICIES_INDEX, LANG
+            , REPORTS_AND_POLICIES_TITLE
+            , TITLE
+            , IS_OPEN, DATE_FORMAT(REG_DATE, '%Y-%m-%d') AS REG_DATE
+            , ADMIN_NAME
+        FROM REPORTS_AND_POLICIES
+        <include refid="searchCondition"/>
+        ORDER BY REPORTS_AND_POLICIES_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectReportsAndPoliciesListCount"
+            parameterType="com.skn.admin.esg.dto.request.ReportsAndPoliciesSearchParam"
+            resultType="int">
+        SELECT
+            COUNT(*)
+        FROM REPORTS_AND_POLICIES
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectReportsAndPolicies" parameterType="string" resultType="com.skn.admin.esg.dto.ReportsAndPolicies">
+        SELECT
+            UID, REPORTS_AND_POLICIES_INDEX, REPORTS_AND_POLICIES_TITLE
+             , OPEN_DATE
+               , LANG ,TITLE, IS_OPEN
+        FROM REPORTS_AND_POLICIES
+        WHERE UID = #{uid}
+    </select>
+
+    <insert id="insertReportsAndPolicies" parameterType="com.skn.admin.esg.dto.ReportsAndPolicies">
+        INSERT INTO REPORTS_AND_POLICIES (
+            UID, REPORTS_AND_POLICIES_TITLE, TITLE, OPEN_DATE
+            , LANG, IS_OPEN
+            , ADMIN_INDEX, ADMIN_ID, ADMIN_NAME
+        ) VALUES (
+            #{uid}, #{reportsAndPoliciesTitle}, #{title}, #{openDate}
+            , #{lang}, #{isOpen}
+            , #{adminIndex}, #{adminId}, #{adminName}
+        )
+        <selectKey keyProperty="reportsAndPoliciesIndex" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="updateReportsAndPolicies" parameterType="com.skn.admin.esg.dto.ReportsAndPolicies">
+        UPDATE REPORTS_AND_POLICIES
+        SET
+            REPORTS_AND_POLICIES_TITLE = #{reportsAndPoliciesTitle},
+            TITLE = #{title},
+            OPEN_DATE = #{openDate},
+            LANG = #{lang},
+            IS_OPEN = #{isOpen},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteReportsAndPolicies" parameterType="com.skn.admin.esg.dto.ReportsAndPolicies">
+        DELETE FROM REPORTS_AND_POLICIES
+        WHERE REPORTS_AND_POLICIES_INDEX = #{reportsAndPoliciesIndex}
+    </delete>
+</mapper>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.ir.mapper.AuditReportMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="lang != 'EN'.toString()">
+                    LANG='KO'
+                </when>
+                <otherwise>
+                    LANG='EN'
+                </otherwise>
+            </choose>
+            <if test="year != null and year != ''">
+                AND YEAR = #{year}
+            </if>
+            <if test="searchWord != null and searchWord != ''">
+                AND ADMIN_NAME=#{searchWord}
+            </if>
+            <if test="startDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+            </if>
+            <if test="endDate != null">
+                AND DATE_FORMAT(REG_DATE, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+            </if>
+            <if test="isOpen == 'Y'.toString()">
+                AND IS_OPEN = 'Y'
+            </if>
+            <if test="isOpen == 'N'.toString()">
+                AND IS_OPEN = 'N'
+            </if>
+        </where>
+    </sql>
+    <select id="selectAuditReportList"
+            parameterType="com.skn.admin.ir.dto.request.AuditReportSearchParam"
+            resultType="com.skn.admin.ir.dto.AuditReport">
+        SELECT
+            UID, AUDIT_REPORT_INDEX, LANG
+            , YEAR
+            , IS_OPEN, DATE_FORMAT(REG_DATE, '%Y-%m-%d') AS REG_DATE
+            , ADMIN_NAME
+        FROM AUDIT_REPORT
+        <include refid="searchCondition"/>
+        ORDER BY AUDIT_REPORT_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectAuditReportListCount"
+            parameterType="com.skn.admin.ir.dto.request.AuditReportSearchParam"
+            resultType="int">
+        SELECT
+            COUNT(*)
+        FROM AUDIT_REPORT
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectAuditReport" parameterType="string" resultType="com.skn.admin.ir.dto.AuditReport">
+        SELECT
+            UID, AUDIT_REPORT_INDEX, YEAR, LANG , IS_OPEN
+        FROM AUDIT_REPORT
+        WHERE UID = #{uid}
+    </select>
+
+    <insert id="insertAuditReport" parameterType="com.skn.admin.ir.dto.AuditReport">
+        INSERT INTO AUDIT_REPORT (
+            UID, YEAR
+            , LANG, IS_OPEN
+            , ADMIN_INDEX, ADMIN_ID, ADMIN_NAME
+        ) VALUES (
+            #{uid}, #{year}
+            , #{lang}, #{isOpen}
+            , #{adminIndex}, #{adminId}, #{adminName}
+        )
+        <selectKey keyProperty="auditReportIndex" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="updateAuditReport" parameterType="com.skn.admin.ir.dto.AuditReport">
+        UPDATE AUDIT_REPORT
+        SET
+            YEAR = #{year},
+            LANG = #{lang},
+            IS_OPEN = #{isOpen},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteAuditReport" parameterType="com.skn.admin.ir.dto.AuditReport">
+        DELETE FROM AUDIT_REPORT
+        WHERE AUDIT_REPORT_INDEX = #{auditReportIndex}
+    </delete>
+</mapper>

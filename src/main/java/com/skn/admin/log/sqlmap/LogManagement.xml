@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.log.mapper.LogManagementMapper">
+    <select id="selectLoginLogList" parameterType="map" resultType="com.skn.admin.log.dto.response.ResponseLoginLogListDto">
+        SELECT
+            AL.LOG_INDEX,
+            AL.ADMIN_INDEX,
+            AL.ADMIN_ID,
+            AL.LOGIN_DATE,
+            AL.IP,
+            AL.RESULT,
+            A.ADMIN_NAME
+        FROM ADMIN_LOGIN_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="type != '' and type != null">
+                AND AL.RESULT = #{type}
+            </if>
+            <if test="sdate != '' and sdate != null">
+                AND AL.LOGIN_DATE  <![CDATA[ <= ]]>  #{sdate}
+            </if>
+            <if test="edate != '' and edate != null">
+                AND AL.LOGIN_DATE  <![CDATA[ >= ]]> #{edate}
+            </if>
+            <if test="keyword != '' and keyword != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{keyword}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{keyword}, '%') OR AL.IP LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY AL.LOG_INDEX DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+
+    <select id="selectLoginLogListCount" parameterType="map" resultType="Integer">
+        SELECT
+            COUNT(*)
+        FROM ADMIN_LOGIN_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="type != '' and type != null">
+                AND AL.RESULT = #{type}
+            </if>
+            <if test="sdate != '' and sdate != null">
+                AND AL.LOGIN_DATE  <![CDATA[ <= ]]>  #{sdate}
+            </if>
+            <if test="edate != '' and edate != null">
+                AND AL.LOGIN_DATE  <![CDATA[ >= ]]> #{edate}
+            </if>
+            <if test="keyword != '' and keyword != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{keyword}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{keyword}, '%') OR AL.IP LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="selectUseLogList" parameterType="map" resultType="com.skn.admin.log.dto.response.ResponseUseLogListDto">
+        SELECT
+            AL.UID,
+            AL.DETAIL,
+            AL.ACTION_TYPE,
+            AL.ADMIN_ID,
+            A.ADMIN_NAME,
+            AL.IP,
+            AL.REG_DATE
+        FROM ADMIN_ACTION_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="actionType == 'PUT'">
+                AND (AL.ACTION_TYPE = 'PUT' OR AL.ACTION_TYPE = 'PATCH')
+            </if>
+            <if test="actionType != 'PUT' and actionType != '' and actionType != null">
+                AND AL.ACTION_TYPE = #{actionType}
+            </if>
+            <if test="sdate != '' and sdate != null">
+                AND AL.REG_DATE  <![CDATA[ <= ]]>  #{sdate}
+            </if>
+            <if test="edate != '' and edate != null">
+                AND AL.REG_DATE  <![CDATA[ >= ]]> #{edate}
+            </if>
+            <if test="keyword != '' and keyword != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{keyword}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{keyword}, '%') OR AL.IP LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY AL.ADMIN_ACTION_LOG_INDEX DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectUseLogListCount" parameterType="map" resultType="Integer">
+        SELECT
+            COUNT(*)
+        FROM ADMIN_ACTION_LOG AS AL
+        INNER JOIN ADMIN AS A ON A.ADMIN_INDEX = AL.ADMIN_INDEX
+        <where>
+            <if test="actionType == 'PUT'">
+                AND (AL.ACTION_TYPE = 'PUT' OR AL.ACTION_TYPE = 'PATCH')
+            </if>
+            <if test="actionType != 'PUT' and actionType != '' and type != null">
+                AND AL.ACTION_TYPE = #{actionType}
+            </if>
+            <if test="sdate != '' and sdate != null">
+                AND AL.REG_DATE  <![CDATA[ <= ]]>  #{sdate}
+            </if>
+            <if test="edate != '' and edate != null">
+                AND AL.REG_DATE  <![CDATA[ >= ]]> #{edate}
+            </if>
+            <if test="keyword != '' and keyword != null">
+                AND (AL.ADMIN_ID LIKE CONCAT('%', #{keyword}, '%') OR A.ADMIN_NAME LIKE CONCAT('%', #{keyword}, '%') OR AL.IP LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+</mapper>

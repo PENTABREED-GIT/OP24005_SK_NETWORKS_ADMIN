@@ -1,0 +1,31 @@
+/* 에디터 아이콘 색상 설정 */
+.fr-toolbar .fr-command.fr-btn i, .fr-popup .fr-command.fr-btn i {
+    color: #222;
+}
+.draggable-handle {
+    cursor:pointer;
+}
+
+/*검색 타이틀 대쉬 설정*/
+.search-title-dash {
+    color: #009EF7;
+    font-weight: bold;
+    margin-right: 3px;
+}
+
+.btn-box {background-color: #F5F8FA; padding: 10px;}
+.custom-btn {margin: 3px; border-radius: 12px; cursor: auto !important; display: inline-flex; align-items: center}
+.custom-btn[disabled]{border: 1px solid gray; background-color: #F5F8FA; color: #666666;}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+ -webkit-appearance: none;
+}
+/* 필수 입력 필드*/
+.nt-req:after {
+    content: "*";
+    color: #ff2222 !important;
+}
+body {
+    font-size: 15px !important;
+}

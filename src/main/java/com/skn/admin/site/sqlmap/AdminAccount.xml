@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.site.mapper.AdminAccountMapper">
+    <select id="selectAdminAccountList" resultType="com.skn.admin.site.dto.adminaccount.AdminAccount">
+        SELECT
+            UID,
+            ADMIN_INDEX,
+            ADMIN_GROUP_INDEX,
+            ADMIN_ID,
+            ADMIN_PW,
+            ADMIN_NAME,
+            PHONE_NO,
+            DEPARTMENT,
+            DUTY,
+            EMAIL,
+            IS_FIRST_LOGIN,
+            MOD_DATE,
+            REG_DATE,
+            ADMIN_TYPE,
+            IS_USE,
+            IS_SLEEP,
+            IP,
+            LAST_LOGIN_DATE,
+            LAST_LOGIN_IP,
+            REG_ADMIN_INDEX,
+            REG_ADMIN_ID,
+            NEXT_PW_MOD_DATE,
+            LOGIN_FAIL_COUNT,
+            PW_MOD_DATE,
+            IS_TEMP_PW
+        FROM ADMIN
+        <where>
+            <if test="startDate != null">
+                AND REG_DATE <![CDATA[>]]> #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND REG_DATE <![CDATA[<=]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+            </if>
+            <if test="department != null and department != '' ">
+                AND DEPARTMENT = #{department}
+            </if>
+            <if test="adminGroupIndex != null and adminGroupIndex != '' ">
+                AND ADMIN_GROUP_INDEX = #{adminGroupIndex}
+            </if>
+            <if test="isUse != null and isUse != '' ">
+                AND IS_USE = #{isUse}
+            </if>
+            <if test="searchValue != null and searchValue != '' ">
+                AND ADMIN_ID LIKE CONCAT('%', #{searchValue} ,'%')
+            </if>
+        </where>
+        ORDER BY ADMIN_INDEX DESC
+        LIMIT #{offset}, #{size}
+    </select>
+    <select id="selectAdminAccountTotalCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM ADMIN
+        <where>
+            <if test="startDate != null">
+                AND REG_DATE <![CDATA[>]]> #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND REG_DATE <![CDATA[<=]]> DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+            </if>
+            <if test="department != null and department != '' ">
+                AND DEPARTMENT = #{department}
+            </if>
+            <if test="adminGroupIndex != null and adminGroupIndex != '' ">
+                AND ADMIN_GROUP_INDEX = #{adminGroupIndex}
+            </if>
+            <if test="isUse != null and isUse != '' ">
+                AND IS_USE = #{isUse}
+            </if>
+            <if test="searchValue != null and searchValue != '' ">
+                AND ADMIN_ID LIKE CONCAT('%', #{searchValue} ,'%')
+            </if>
+        </where>
+    </select>
+    <select id="selectAdminAccount" resultType="com.skn.admin.site.dto.adminaccount.AdminAccount">
+        SELECT
+            AD.UID,
+            AD.ADMIN_INDEX,
+            AD.ADMIN_GROUP_INDEX,
+            AD.ADMIN_ID,
+            AD.ADMIN_PW,
+            AD.ADMIN_NAME,
+            AD.PHONE_NO,
+            AD.DEPARTMENT,
+            AD.DUTY,
+            AD.EMAIL,
+            AD.IS_FIRST_LOGIN,
+            AD.MOD_DATE,
+            AD.REG_DATE,
+            AD.ADMIN_TYPE,
+            AD.IS_USE,
+            AD.IS_SLEEP,
+            AD.IP,
+            AD.LAST_LOGIN_DATE,
+            AD.LAST_LOGIN_IP,
+            AD.REG_ADMIN_INDEX,
+            AD.REG_ADMIN_ID,
+            AD.NEXT_PW_MOD_DATE,
+            AD.LOGIN_FAIL_COUNT,
+            AD.PW_MOD_DATE,
+            AD.IS_TEMP_PW,
+            AG.GROUP_NAME AS ADMIN_GROUP_NAME
+        FROM ADMIN AD
+        INNER JOIN ADMIN_GROUP AG ON AG.ADMIN_GROUP_INDEX = AD.ADMIN_GROUP_INDEX
+        WHERE AD.UID = #{uid}
+    </select>
+
+    <insert id="insertAdminAccount" parameterType="com.skn.admin.site.dto.adminaccount.AdminAccount" useGeneratedKeys="true"
+            keyProperty="adminIndex" keyColumn="ADMIN_INDEX">
+        INSERT INTO ADMIN (
+            UID,
+            ADMIN_GROUP_INDEX,
+            ADMIN_ID,
+            ADMIN_PW,
+            ADMIN_NAME,
+            PHONE_NO,
+            DEPARTMENT,
+            DUTY,
+            EMAIL,
+            REG_DATE,
+            ADMIN_TYPE,
+            IS_USE,
+            REG_ADMIN_ID,
+            REG_ADMIN_INDEX,
+            NEXT_PW_MOD_DATE,
+            LOGIN_FAIL_COUNT,
+            PW_MOD_DATE
+        ) VALUES (
+             #{uid},
+             #{adminGroupIndex},
+             #{adminId},
+             #{adminPw},
+             #{adminName},
+             #{phoneNo},
+             #{department},
+             #{duty},
+             #{email},
+             now(),
+             #{adminType},
+             #{isUse},
+             #{regAdminId},
+             #{regAdminIndex},
+             #{nextPwModDate},
+             0,
+             #{pwModDate}
+         )
+    </insert>
+
+    <update id="updateAdminAccount" parameterType="com.skn.admin.site.dto.adminaccount.AdminAccount">
+        UPDATE ADMIN
+        SET ADMIN_GROUP_INDEX = #{adminGroupIndex},
+            ADMIN_ID = #{adminId},
+            <if test="adminPw != null and adminPw != ''">
+            ADMIN_PW = #{adminPw},
+            </if>
+            ADMIN_NAME = #{adminName},
+            PHONE_NO = #{phoneNo},
+            DEPARTMENT = #{department},
+            DUTY = #{duty},
+            EMAIL = #{email},
+            ADMIN_TYPE = #{adminType},
+            IS_USE = #{isUse},
+            LOGIN_FAIL_COUNT = 0,
+            IS_SLEEP = 'N',
+            MOD_DATE = now(),
+            REG_ADMIN_ID = #{regAdminId},
+            REG_ADMIN_INDEX = #{regAdminIndex},
+            NEXT_PW_MOD_DATE = #{nextPwModDate},
+            PW_MOD_DATE = #{pwModDate}
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteAdminAccount">
+        DELETE FROM ADMIN
+        WHERE UID = #{uid}
+    </delete>
+
+    <select id="checkDuplicateAdminId" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM ADMIN WHERE ADMIN_ID = #{adminId})
+    </select>
+
+    <select id="checkDuplicateEmail" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM ADMIN WHERE EMAIL = #{email})
+    </select>
+
+    <select id="selectDepartmentList" resultType="java.lang.String">
+        SELECT DEPARTMENT
+        FROM ADMIN
+        GROUP BY DEPARTMENT
+    </select>
+
+    <select id="selectAdminListAll" resultType="com.skn.admin.site.dto.adminaccount.AdminAccount">
+        SELECT
+            UID,
+            ADMIN_INDEX,
+            ADMIN_GROUP_INDEX,
+            ADMIN_ID,
+            ADMIN_PW,
+            ADMIN_NAME,
+            PHONE_NO,
+            DEPARTMENT,
+            DUTY,
+            EMAIL,
+            IS_FIRST_LOGIN,
+            MOD_DATE,
+            REG_DATE,
+            ADMIN_TYPE,
+            IS_USE,
+            IS_SLEEP,
+            IP,
+            LAST_LOGIN_DATE,
+            LAST_LOGIN_IP,
+            REG_ADMIN_INDEX,
+            REG_ADMIN_ID,
+            NEXT_PW_MOD_DATE,
+            LOGIN_FAIL_COUNT,
+            PW_MOD_DATE,
+            IS_TEMP_PW
+        FROM ADMIN
+    </select>
+    <update id="updateAdminIsSleep" parameterType="com.skn.admin.site.dto.adminaccount.AdminAccount">
+        UPDATE ADMIN
+        SET IS_SLEEP = 'Y',
+            IS_USE = 'N'
+        WHERE UID = #{uid}
+    </update>
+
+    <select id="findInactiveAdminUids" resultType="String">
+        SELECT UID
+        FROM ADMIN
+        WHERE LAST_LOGIN_DATE <![CDATA[<=]]> DATE_SUB(NOW(), INTERVAL 3 MONTH)
+        AND IS_USE = 'Y' -- 이미 사용 중지된 계정이 아닌 경우만 선택
+    </select>
+</mapper>

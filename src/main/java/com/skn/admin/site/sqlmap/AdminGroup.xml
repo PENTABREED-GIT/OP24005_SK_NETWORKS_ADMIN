@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.site.mapper.AdminGroupOldMapper">
+
+    <resultMap id="selectAdminGroupInfoMap" type="com.skn.admin.site.dto.AdminGroup">
+        <result column="UID" property="uid"/>
+        <result column="ADMIN_GROUP_INDEX" property="adminGroupIndex"/>
+        <result column="GROUP_NAME" property="groupName"/>
+        <result column="DESCRIPTION" property="description"/>
+        <result column="IS_SUPER" property="isSuper"/>
+        <result column="IS_USE" property="isUse"/>
+        <result column="IS_MAIN" property="isMain"/>
+        <collection property="adminGroupMenuList" ofType="com.skn.admin.site.dto.AdminMenu">
+            <result column="MENU_INDEX" property="menuIndex"/>
+            <result column="PARENT_INDEX" property="parentIndex"/>
+            <result column="ROOT_INDEX" property="rootIndex"/>
+            <result column="MENU_NAME" property="menuName"/>
+            <result column="URL" property="url"/>
+            <result column="URL_STRING" property="urlString"/>
+            <result column="DEPTH" property="depth"/>
+            <result column="LOCATION" property="location"/>
+            <result column="SORT_ORDER" property="sortOrder"/>
+            <result column="MENU_CODE" property="menuCode"/>
+            <result column="IS_DISPLAY" property="isDisplay"/>
+            <result column="ADMIN_ID" property="adminId"/>
+            <result column="REG_DATE" property="regDate"/>
+        </collection>
+    </resultMap>
+
+    <insert id="insertAdminGroup" parameterType="com.skn.admin.site.dto.AdminGroup" useGeneratedKeys="true"
+            keyProperty="adminGroupIndex" keyColumn="ADMIN_GROUP_INDEX">
+        INSERT INTO ADMIN_GROUP
+            (
+                UID,
+                GROUP_NAME,
+                DESCRIPTION,
+                REG_DATE,
+                ADMIN_ID,
+                ADMIN_INDEX,
+                IS_USE,
+                IS_SUPER,
+                IS_MAIN
+            )
+        VALUES
+           (
+                #{uid},
+                #{groupName},
+                #{description},
+                NOW(),
+                #{adminId},
+                #{adminIndex},
+                #{isUse},
+                #{isSuper},
+                #{isMain}
+           )
+    </insert>
+
+    <update id="updateAdminGroup" parameterType="com.skn.admin.site.dto.AdminGroup">
+        UPDATE  ADMIN_GROUP
+        SET     GROUP_NAME = #{groupName},
+                DESCRIPTION = #{description},
+                IS_USE = #{isUse},
+                IS_MAIN = #{isMain},
+                MOD_DATE = now(),
+                ADMIN_ID = #{adminId}
+        WHERE   UID = #{uid}
+    </update>
+
+    <insert id="insertAdminGroupLog" parameterType="com.skn.admin.site.dto.AdminGroup" useGeneratedKeys="true"
+            keyProperty="adminGroupLogIndex" keyColumn="ADMIN_GROUP_LOG_INDEX">
+        INSERT INTO ADMIN_GROUP_LOG
+        (
+            UID,
+            ADMIN_GROUP_INDEX,
+            GROUP_NAME,
+            DESCRIPTION,
+            REG_DATE,
+            ADMIN_ID,
+            ADMIN_INDEX,
+            IS_USE,
+            IS_SUPER,
+            IS_MAIN
+        )
+        VALUES
+            (
+                #{uid},
+                #{adminGroupIndex},
+                #{groupName},
+                #{description},
+                NOW(),
+                #{adminId},
+                #{adminIndex},
+                #{isUse},
+                #{isSuper},
+                #{isMain}
+            )
+    </insert>
+
+    <select id="selectAdminGroupList" resultType="com.skn.admin.site.dto.AdminGroup">
+        SELECT
+            UID,
+            ADMIN_GROUP_INDEX,
+            GROUP_NAME,
+            DESCRIPTION,
+            REG_DATE,
+            MOD_DATE,
+            ADMIN_ID,
+            ADMIN_INDEX,
+            IS_SUPER,
+            IS_USE,
+            IS_MAIN
+        FROM ADMIN_GROUP
+        <where>
+            <if test="isUse != null and isUse != ''">
+                AND IS_USE = #{isUse}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAdminGroupInfos" parameterType="Map" resultType="com.skn.admin.site.dto.AdminGroup">
+        SELECT
+                UID,
+                ADMIN_GROUP_INDEX,
+                GROUP_NAME,
+                DESCRIPTION,
+                IS_SUPER,
+                IS_USE,
+                IS_MAIN
+        FROM    ADMIN_GROUP
+        <where>
+            <if test="uid != null and uid != ''">
+                UID = #{uid}
+            </if>
+            <if test="groupNm != null and groupNm != ''">
+                GROUP_NAME = #{groupNm}
+            </if>
+            <if test="isUse != null and isUse != ''">
+                IS_USE = #{isUse}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAdminGroupTotalCount" parameterType="Map" resultType="Integer">
+        SELECT
+                COUNT(1)
+        FROM    ADMIN_GROUP
+        <where>
+            <if test="uid != null and uid != ''">
+                UID = #{uid}
+            </if>
+            <if test="groupNm != null and groupNm != ''">
+                GROUP_NAME = #{groupNm}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAdminGroupInfo" parameterType="map" resultMap="selectAdminGroupInfoMap">
+        SELECT
+                UID,
+                AG.ADMIN_GROUP_INDEX,
+                GROUP_NAME,
+                AG.DESCRIPTION,
+                IS_SUPER,
+                IS_USE,
+                IS_MAIN,
+                VW_MENU.MENU_INDEX,
+                PARENT_INDEX,
+                ROOT_INDEX,
+                MENU_NAME,
+                URL,
+                URL_STRING,
+                DEPTH,
+                LOCATION,
+                SORT_ORDER,
+                MENU_CODE,
+                IS_DISPLAY,
+                VW_MENU.ADMIN_ID,
+                VW_MENU.REG_DATE
+        FROM    ADMIN_GROUP AG,
+                (
+                    SELECT  AM.MENU_INDEX,
+                            PARENT_INDEX,
+                            ROOT_INDEX,
+                            MENU_NAME,
+                            URL,
+                            URL_STRING,
+                            DEPTH,
+                            LOCATION,
+                            SORT_ORDER,
+                            MENU_CODE,
+                            IS_DISPLAY,
+                            ADMIN_ID,
+                            AP.REG_DATE
+                    FROM    VW_ADMIN_MENU AM LEFT JOIN ADMIN_GROUP_PERMISSION AP ON AM.MENU_INDEX = AP.MENU_INDEX
+                            AND AP.ADMIN_GROUP_INDEX = (SELECT ADMIN_GROUP_INDEX FROM ADMIN_GROUP WHERE UID = #{uid})
+                    WHERE   IS_DISPLAY='Y'
+                    AND     DEPTH <![CDATA[>=]]> 1
+                    ORDER BY ROOT_INDEX, MENU_CODE, MENU_NAME
+                ) AS VW_MENU
+        WHERE UID = #{uid}
+        ORDER BY ROOT_INDEX, MENU_CODE, MENU_NAME
+    </select>
+
+    <delete id="deleteAdminGroup" parameterType="java.lang.String">
+        DELETE FROM ADMIN_GROUP
+        WHERE UID = #{uid}
+    </delete>
+
+    <select id="selectAdminPrivilegeList" resultType="com.skn.admin.site.dto.AdminGroup">
+        SELECT
+        UID,
+        ADMIN_GROUP_INDEX,
+        GROUP_NAME,
+        DESCRIPTION,
+        REG_DATE,
+        MOD_DATE,
+        ADMIN_ID,
+        ADMIN_INDEX,
+        IS_SUPER,
+        IS_USE,
+        IS_MAIN
+        FROM ADMIN_GROUP
+        <where>
+            <if test="searchValue != null and searchValue != '' ">
+                AND DESCRIPTION LIKE CONCAT('%', #{searchValue} ,'%')
+            </if>
+            <if test="isUse != null and isUse != ''">
+                AND IS_USE = #{isUse}
+            </if>
+        </where>
+        ORDER BY ADMIN_GROUP_INDEX DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="selectAdminPrivilegeTotalCount" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM ADMIN_GROUP
+        <where>
+            <if test="searchValue != null and searchValue != '' ">
+                AND DESCRIPTION LIKE CONCAT('%', #{searchValue} ,'%')
+            </if>
+            <if test="isUse != null and isUse != ''">
+                AND IS_USE = #{isUse}
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="AdminGroupResultMap" type="com.skn.admin.site.dto.AdminGroup">
+        <id property="uid" column="UID"/>
+        <result property="adminGroupIndex" column="ADMIN_GROUP_INDEX"/>
+        <result property="groupName" column="GROUP_NAME"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="isSuper" column="IS_SUPER"/>
+        <result property="isUse" column="IS_USE"/>
+        <result property="isMain" column="IS_MAIN"/>
+        <result property="regDate" column="REG_DATE"/>
+        <result property="modDate" column="MOD_DATE"/>
+        <result property="adminId" column="ADMIN_ID"/>
+        <result property="department" column="DEPARTMENT"/>
+        <collection property="adminGroupPermissionList" resultMap="menuPermission"/>
+    </resultMap>
+
+    <resultMap id="menuPermission" type="com.skn.admin.site.dto.AdminGroupPermission">
+        <result property="menuIndex" column="MENU_INDEX"/>
+        <result property="permission" column="PERMISSION"/>
+    </resultMap>
+    <select id="selectAdminPrivilege" resultMap="AdminGroupResultMap">
+        SELECT
+            AG.UID,
+            AG.ADMIN_GROUP_INDEX,
+            AG.GROUP_NAME,
+            AG.DESCRIPTION,
+            AG.IS_SUPER,
+            AG.IS_USE,
+            AG.IS_MAIN,
+            AG.REG_DATE,
+            AG.MOD_DATE,
+            AG.ADMIN_ID,
+            AGP.MENU_INDEX,
+            AGP.PERMISSION,
+            AM.DEPARTMENT
+        FROM ADMIN_GROUP AS AG
+             INNER JOIN ADMIN_GROUP_PERMISSION AS AGP ON AG.ADMIN_GROUP_INDEX = AGP.ADMIN_GROUP_INDEX
+             INNER JOIN ADMIN AM ON AM.ADMIN_INDEX = AG.ADMIN_INDEX
+        WHERE AG.UID = #{uid}
+    </select>
+
+    <select id="isExistAdminGroupByGroupName" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM ADMIN_GROUP
+            <where>
+                AND GROUP_NAME = #{groupName}
+                <if test="uid != null and uid != '' ">
+                    AND UID != #{uid}
+                </if>
+            </where>
+            )
+    </select>
+
+    <select id="selectAdminPrivilegeByAdminGroupIndex" resultType="com.skn.admin.site.dto.AdminGroup">
+        SELECT
+            AG.UID,
+            AG.ADMIN_GROUP_INDEX,
+            AG.GROUP_NAME,
+            AG.DESCRIPTION,
+            AG.IS_SUPER,
+            AG.IS_USE,
+            AG.IS_MAIN,
+            AG.REG_DATE,
+            AG.MOD_DATE,
+            AG.ADMIN_ID
+        FROM ADMIN_GROUP AS AG
+        WHERE AG.ADMIN_GROUP_INDEX = #{adminGroupIndex}
+    </select>
+
+    <select id="isUseAdminGroup" resultType="boolean">
+        SELECT EXISTS (
+            SELECT count(A.ADMIN_INDEX)
+            FROM ADMIN_GROUP AG
+                INNER JOIN ADMIN A ON A.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX
+            WHERE AG.UID = #{uid}
+            GROUP BY AG.ADMIN_GROUP_INDEX
+        )
+    </select>
+</mapper>

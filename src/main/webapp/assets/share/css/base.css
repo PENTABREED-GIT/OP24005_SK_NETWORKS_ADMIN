@@ -1,0 +1,101 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: bold;
+}
+
+a:link,
+a:visited,
+.btn-link {
+  font-weight: normal;
+  text-decoration: none;
+}
+
+ol,
+ul,
+figure,
+figcaption {
+  margin: 0;
+}
+
+input[type="number"] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+table tr th,
+table tr td {
+  vertical-align: middle;
+}
+
+@media all and (min-width: 1280px) {
+  .collapse-sm.collapse {
+    display: block !important;
+  }
+}
+
+.cursor-pointer:hover {
+  cursor: pointer;
+}
+
+.border-lg-end {
+  position: relative;
+}
+
+@media all and (min-width: 1280px) {
+  .border-lg-end::after {
+    display: block;
+    position: absolute;
+    content: "";
+    right: 0;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+            transform: translateY(-50%);
+    width: 1px;
+    height: 30px;
+    background-color: #c4c4c4;
+  }
+}
+
+textarea {
+  resize: none;
+}
+
+a.btn.d-inline {
+  font-size: inherit;
+  text-decoration: underline;
+  margin-top: -2px;
+  padding: 0;
+  border: 0;
+}
+
+.rounded-sm {
+  border-radius: 5px !important;
+}
+
+@media all and (min-width: 1280px) {
+  .modal-xxl {
+    max-width: 1300px !important;
+  }
+}
+
+@media all and (max-width: 1280px) {
+  .modal-xxl {
+    max-width: 98vw !important;
+  }
+}
+
+.btn-drag {
+  cursor: move !important;
+}
+/*# sourceMappingURL=base.css.map */

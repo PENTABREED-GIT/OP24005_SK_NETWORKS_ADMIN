@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.environment.mapper.AdminActionLogMapper">
+    <select id="selectActionLogList" parameterType="HashMap" resultType="com.skn.admin.environment.dto.AdminActionLog">
+        SELECT
+        AA.MENU_INDEX,
+        AA.UID,
+        AA.URL,
+        AA.URL2,
+        AA.REG_DATE,
+        AA.ADMIN_INDEX,
+        AA.ADMIN_ID,
+        AA.ACTION_TYPE,
+        AA.IP,
+        AM2.LOCATION2,
+        AD.ADMIN_NAME,
+        AA.ACTION_TARGET,
+        AA.ACTION_NAME,
+        AA.DETAIL
+        FROM (
+        SELECT AM.MENU_NAME,
+        AM.MENU_INDEX,
+        AL.UID,
+        AM.URL,
+        AL.URL AS URL2,
+        AL.REG_DATE,
+        AL.ADMIN_INDEX,
+        AL.ADMIN_ID,
+        AL.IP,
+        AL.ACTION_TYPE,
+        AL.ACTION_TARGET,
+        AL.ACTION_NAME,
+        AL.DETAIL
+        FROM ADMIN_ACTION_LOG AL
+        LEFT JOIN ADMIN_MENU AM ON
+        LOWER(AM.URL) LIKE CONCAT('%', AL.URL ,'%')
+        ) AA
+        LEFT JOIN VW_ADMIN_MENU AM2 ON AM2.MENU_INDEX = AA.MENU_INDEX
+        INNER JOIN ADMIN AD ON AD.ADMIN_INDEX = AA.ADMIN_INDEX
+        <where>
+            <if test="searchAdminId != null and searchAdminId != ''">
+                AND AA.ADMIN_ID = #{searchAdminId}
+            </if>
+            <if test="search != null and search != ''">
+                AND AA.ADMIN_ID LIKE CONCAT('%', #{search}, '%')
+            </if>
+            <if test="sdate != null and sdate != ''">
+                AND DATEDIFF(AA.REG_DATE,#{sdate}) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate != null and edate != ''">
+                AND DATEDIFF(AA.REG_DATE,#{edate}) <![CDATA[<=]]> 0
+            </if>
+            <if test="actionType != null and actionType !=''">
+                AND AA.ACTION_TYPE = #{actionType}
+            </if>
+            <if test="sdate == null or sdate == ''">
+                AND DATEDIFF(AA.REG_DATE, CURDATE()) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate == null or edate == ''">
+                AND DATEDIFF(AA.REG_DATE, CURDATE()) <![CDATA[<=]]> 0
+            </if>
+        </where>
+        ORDER BY AA.REG_DATE DESC
+        LIMIT #{limit} OFFSET #{offset};
+    </select>
+
+    <select id="selectActionLogCount" parameterType="HashMap" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM (
+        SELECT AM.MENU_NAME,
+        AM.MENU_INDEX,
+        AL.UID,
+        AM.URL,
+        AL.URL AS URL2,
+        AL.REG_DATE,
+        AL.ADMIN_INDEX,
+        AL.ADMIN_ID,
+        AL.IP,
+        AL.ACTION_TYPE,
+        AL.ACTION_TARGET,
+        AL.ACTION_NAME,
+        AL.DETAIL
+        FROM ADMIN_ACTION_LOG AL
+        LEFT JOIN ADMIN_MENU AM ON
+        LOWER(AM.URL) LIKE CONCAT('%', AL.URL ,'%')
+        ) AA
+        LEFT JOIN VW_ADMIN_MENU AM2 ON AM2.MENU_INDEX = AA.MENU_INDEX
+        INNER JOIN ADMIN AD ON AD.ADMIN_INDEX = AA.ADMIN_INDEX
+        <where>
+            <if test="searchAdminId != null and searchAdminId != ''">
+                AND AA.ADMIN_ID = #{searchAdminId}
+            </if>
+            <if test="search != null and search != ''">
+                AND AA.ADMIN_ID LIKE CONCAT('%', #{search}, '%')
+            </if>
+            <if test="sdate != null and sdate != ''">
+                AND DATEDIFF(AA.REG_DATE,#{sdate}) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate != null and edate != ''">
+                AND DATEDIFF(AA.REG_DATE,#{edate}) <![CDATA[<=]]> 0
+            </if>
+            <if test="actionType != null and actionType !=''">
+                AND AA.ACTION_TYPE = #{actionType}
+            </if>
+            <if test="sdate == null or sdate == ''">
+                AND DATEDIFF(AA.REG_DATE, CURDATE()) <![CDATA[>=]]> 0
+            </if>
+            <if test="edate == null or edate == ''">
+                AND DATEDIFF(AA.REG_DATE, CURDATE()) <![CDATA[<=]]> 0
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertAdminActionLog" parameterType="com.skn.admin.environment.dto.AdminActionLog">
+        INSERT INTO ADMIN_ACTION_LOG ( ADMIN_INDEX, UID, ADMIN_ID, URL, DOWNLOAD_REASON, DETAIL, DATA, REG_DATE, IP, ACTION_TYPE,ACTION_TARGET,ACTION_NAME  )
+        VALUES (#{adminIndex},
+                #{uid},
+                #{adminId},
+                #{url},
+                #{downloadReason},
+                #{detail},
+                #{data},
+                now(),
+                #{ip},
+                #{actionType},
+                #{actionTarget},
+                #{actionName}
+               )
+    </insert>
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.environment.mapper.SettingMapper">
+
+    <select id="selectSetting" resultType="com.skn.admin.environment.dto.Setting">
+        SELECT
+            SETTING_INDEX, IS_USE_PW, PW_PERIOD, PW_PERIOD_NEXT, IS_USE_LIFETIME, LIFETIME, IS_USE_IP, SITE_IP, SITE_IP_ALL, ADMIN_INDEX, CRDATE
+        FROM SETTING
+        ORDER BY CRDATE DESC
+            LIMIT 1
+    </select>
+
+    <insert id="insertSetting" parameterType="hashmap">
+        INSERT INTO SETTING (IS_USE_PW, PW_PERIOD, PW_PERIOD_NEXT, IS_USE_LIFETIME, LIFETIME, IS_USE_IP, SITE_IP, SITE_IP_ALL, ADMIN_INDEX, CRDATE )
+        VALUES (#{isUsePw}, #{pwPeriod}, #{pwPeriodNext}, #{isUseLifetime}, #{lifetime}, #{isUseIp}, #{siteIp}, #{siteIpAll}, #{adminIndex}, now())
+    </insert>
+</mapper>

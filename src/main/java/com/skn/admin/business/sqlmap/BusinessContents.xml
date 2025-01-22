@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.business.mapper.BusinessContentsMapper">
+    <sql id="searchCondition">
+        <where>
+            <choose>
+                <when test="lang != 'EN'.toString()">
+                    BC.LANG='KO'
+                </when>
+                <otherwise>
+                    BC.LANG='EN'
+                </otherwise>
+            </choose>
+            <if test="startDate != null">
+                AND DATE_FORMAT(BC.REG_DATE, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{startDate}, '%Y-%m-%d')
+            </if>
+            <if test="endDate != null">
+                AND DATE_FORMAT(BC.REG_DATE, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+            </if>
+            <if test="searchWord != null and searchWord != ''">
+                <if test="searchType == 'TITLE'">
+                    AND BC.TITLE LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <if test="searchType == 'ADMINNAME'">
+                    AND BC.ADMIN_NAME=#{searchWord}
+                </if>
+            </if>
+            <if test="businessAreaIndex != null and businessAreaIndex != ''">
+                AND BC.BUSINESS_AREA_INDEX = #{businessAreaIndex}
+            </if>
+            <if test="isOpen == 'Y'.toString()">
+                AND BC.IS_OPEN = 'Y'
+            </if>
+            <if test="isOpen == 'N'.toString()">
+                AND BC.IS_OPEN = 'N'
+            </if>
+        </where>
+    </sql>
+    <select id="selectBusinessContentsList"
+            parameterType="com.skn.admin.business.dto.request.BusinessContentsSearchParam"
+            resultType="com.skn.admin.business.dto.BusinessContents">
+        SELECT
+            BC.UID, BC.BUSINESS_CONTENTS_INDEX, BC.LANG
+             , BA.NAME_KO AS BUSINESS_AREA_NAME
+            , BC.TITLE
+            , BC.IS_OPEN, DATE_FORMAT(BC.REG_DATE, '%Y-%m-%d') AS REG_DATE
+            , BC.ADMIN_NAME
+        FROM BUSINESS_CONTENTS BC
+            INNER JOIN BUSINESS_AREA BA ON BC.BUSINESS_AREA_INDEX=BA.BUSINESS_AREA_INDEX
+        <include refid="searchCondition"/>
+        ORDER BY BUSINESS_CONTENTS_INDEX DESC
+        LIMIT #{offset}, #{pageListSize}
+    </select>
+
+    <select id="selectBusinessContentsListCount"
+            parameterType="com.skn.admin.business.dto.request.BusinessContentsSearchParam"
+            resultType="int">
+        SELECT
+            COUNT(*)
+        FROM BUSINESS_CONTENTS BC
+            INNER JOIN BUSINESS_AREA BA ON BC.BUSINESS_AREA_INDEX=BA.BUSINESS_AREA_INDEX
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectBusinessContents" parameterType="string" resultType="com.skn.admin.business.dto.BusinessContents">
+        SELECT
+            BC.UID, BC.BUSINESS_CONTENTS_INDEX, BC.LANG, BC.TITLE
+               , BC.IS_OPEN
+        , BA.NAME_KO AS BUSINESS_AREA_NAME
+        , BC.BUSINESS_AREA_INDEX
+        FROM BUSINESS_CONTENTS BC
+            INNER JOIN BUSINESS_AREA BA ON BC.BUSINESS_AREA_INDEX=BA.BUSINESS_AREA_INDEX
+        WHERE UID = #{uid}
+    </select>
+
+    <insert id="insertBusinessContents" parameterType="com.skn.admin.business.dto.BusinessContents">
+        INSERT INTO BUSINESS_CONTENTS (
+            UID, LANG, BUSINESS_AREA_INDEX, TITLE
+            , IS_OPEN , ADMIN_INDEX ,ADMIN_ID, ADMIN_NAME
+        ) VALUES (
+            #{uid}, #{lang}, #{businessAreaIndex}, #{title}
+            , #{isOpen}, #{adminIndex}, #{adminId}, #{adminName}
+        )
+        <selectKey keyProperty="businessContentsIndex" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="updateBusinessContents" parameterType="com.skn.admin.business.dto.BusinessContents">
+        UPDATE BUSINESS_CONTENTS
+        SET
+            LANG = #{lang},
+            BUSINESS_AREA_INDEX = #{businessAreaIndex},
+            TITLE = #{title},
+            IS_OPEN = #{isOpen},
+            ADMIN_INDEX = #{adminIndex},
+            ADMIN_ID = #{adminId},
+            ADMIN_NAME = #{adminName},
+            MOD_DATE = CURRENT_TIMESTAMP
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteBusinessContents" parameterType="com.skn.admin.business.dto.BusinessContents">
+        DELETE FROM BUSINESS_CONTENTS
+        WHERE BUSINESS_CONTENTS_INDEX = #{businessContentsIndex}
+    </delete>
+
+    <insert id="insertBusinessContentsDetail" parameterType="com.skn.admin.business.dto.BusinessContentsDetail">
+        INSERT INTO BUSINESS_CONTENTS_DETAIL ( BUSINESS_CONTENTS_INDEX, UID, TITLE, CONTENT, ADDITIONAL_CONTENT)
+        VALUES (#{businessContentsIndex}, #{uid}, #{detailTitle}, #{detailContent}, #{detailAdditionalContent})
+        <selectKey keyProperty="businessContentsDetailIndex" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <select id="selectBusinessContentsDetail" parameterType="string" resultType="com.skn.admin.business.dto.BusinessContentsDetail">
+        SELECT
+            UID, BUSINESS_CONTENTS_DETAIL_INDEX
+             , TITLE AS DETAIL_TITLE
+             , CONTENT AS DETAIL_CONTENT
+             , ADDITIONAL_CONTENT AS DETAIL_ADDITIONAL_CONTENT
+        FROM BUSINESS_CONTENTS_DETAIL
+        WHERE BUSINESS_CONTENTS_INDEX=#{businessContentsIndex}
+        ORDER BY BUSINESS_CONTENTS_DETAIL_INDEX ASC
+    </select>
+
+    <update id="updateBusinessContentsDetail" parameterType="com.skn.admin.business.dto.BusinessContentsDetail">
+        UPDATE BUSINESS_CONTENTS_DETAIL
+        SET
+            TITLE=#{detailTitle}
+            , CONTENT=#{detailContent}
+            , ADDITIONAL_CONTENT=#{detailAdditionalContent}
+        WHERE UID=#{uid}
+    </update>
+
+    <select id="selectBusinessContentsDetailUidList" parameterType="HashMap" resultType="String">
+        SELECT UID FROM BUSINESS_CONTENTS_DETAIL
+        WHERE BUSINESS_CONTENTS_INDEX=#{businessContentsIndex}
+            <if test="detailUidList != null">
+            AND UID NOT IN
+                <foreach collection="detailUidList" item="item" open="(" separator="," close=")">
+                #{item}
+                </foreach>
+            </if>
+    </select>
+
+    <delete id="deleteBusinessContentsDetail" parameterType="HashMap">
+        DELETE FROM BUSINESS_CONTENTS_DETAIL
+        WHERE BUSINESS_CONTENTS_INDEX=#{businessContentsIndex}
+            <if test="detailUidList != null">
+            AND UID NOT IN
+                <foreach collection="detailUidList" item="item" open="(" separator="," close=")">
+                #{item}
+                </foreach>
+            </if>
+    </delete>
+
+
+
+</mapper>

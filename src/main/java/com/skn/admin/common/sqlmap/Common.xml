@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.common.mapper.CommonMapper">
+    <select id="getNextSeq" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT AUTO_INCREMENT
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = 'DB_TRUEDOC'
+        <choose>
+            <when test="_parameter == 'MENU'">
+                AND TABLE_NAME = 'ADMIN_MENU'
+            </when>
+            <when test="_parameter == 'ADMINGROUP'">
+                NEXTSEQ('ADMINGROUP')
+            </when>
+            <when test="_parameter == 'PERMISSIONLOGINDEX'">
+                NEXTSEQ('PERMISSIONLOGINDEX')
+            </when>
+            <when test="_parameter == 'PERMISSIONLOGEXINDEX'">
+                NEXTSEQ('PERMISSIONLOGEXINDEX')
+            </when>
+            <when test="_parameter == 'FILEINFO'">
+                NEXTSEQ('FILEINDEX')
+            </when>
+            <when test="_parameter == 'PAGE'">
+                NEXTSEQ('PAGE')
+            </when>
+            <otherwise>
+                NEXTSEQ('PUBLIC')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getCurrSeq" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+        <choose>
+            <when test="_parameter == 'ADMINGROUP'">
+                CURRSEQ('ADMINGROUP')
+            </when>
+            <when test="_parameter == 'PERMISSIONLOGINDEX'">
+                CURRSEQ('PERMISSIONLOGINDEX')
+            </when>
+            <when test="_parameter == 'PERMISSIONLOGEXINDEX'">
+                CURRSEQ('PERMISSIONLOGEXINDEX')
+            </when>
+            <when test="_parameter == 'FILEINFO'">
+                CURRSEQ('FILEINDEX')
+            </when>
+            <when test="_parameter == 'PAGE'">
+                CURRSEQ('PAGE')
+            </when>
+            <otherwise>
+                CURRSEQ('PUBLIC')
+            </otherwise>
+        </choose>
+    </select>
+
+    <sql id="getPagingQueryStart">
+        SELECT * FROM
+            (
+                SELECT ROWNUM AS rn, t.* FROM (
+    </sql>
+
+    <sql id="getPagingQueryEnd">
+        ) t WHERE ROWNUM <![CDATA[ <= ]]> #{pageSize}*#{pageNo}
+        ) t
+        WHERE  rn <![CDATA[ > ]]> #{pageSize}*(#{pageNo}-1)
+    </sql>
+
+    <select id="selectCountry" resultType="HashMap">
+        SELECT TC.COUNTRY_INDEX,
+               TCL.COUNTRY_NAME,
+               COUNTRY_NO,
+               TC.REG_DATE,
+               TC.MOD_DATE,
+               CONCAT("+", COUNTRY_NO, " ", TCL.COUNTRY_NAME) AS DISP_COUNTRY_NAME
+        FROM TB_COUNTRY TC
+                 JOIN TB_COUNTRY_LANG TCL ON TC.COUNTRY_INDEX = TCL.COUNTRY_INDEX
+        WHERE TCL.LANG = #{lang} AND TC.IS_USE = 'Y'
+        ORDER BY TCL.COUNTRY_NAME ASC
+    </select>
+
+    <select id="selectUserCountryList" resultType="HashMap">
+        SELECT TC.COUNTRY_INDEX,
+               TCL.COUNTRY_NAME,
+               COUNTRY_NO,
+               TC.REG_DATE,
+               TC.MOD_DATE,
+               CONCAT("+", COUNTRY_NO, " ", TCL.COUNTRY_NAME) AS DISP_COUNTRY_NAME
+        FROM TB_COUNTRY TC
+                 JOIN TB_COUNTRY_LANG TCL ON TC.COUNTRY_INDEX = TCL.COUNTRY_INDEX
+                 JOIN TB_USER TU ON TC.COUNTRY_INDEX = TU.COUNTRY
+        WHERE TCL.LANG = #{lang} AND TC.IS_USE = 'Y'
+        GROUP BY TC.COUNTRY_INDEX
+        ORDER BY TCL.COUNTRY_NAME ASC
+
+    </select>
+</mapper>

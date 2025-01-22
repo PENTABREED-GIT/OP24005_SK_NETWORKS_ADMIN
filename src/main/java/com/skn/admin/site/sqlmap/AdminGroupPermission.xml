@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.site.mapper.AdminGroupPermissionMapper">
+	<insert id="insertAdminGroupPermission" parameterType="com.skn.admin.environment.dto.AdminGroupMenuFormParam">
+		INSERT INTO ADMIN_GROUP_PERMISSION
+		(
+			ADMIN_GROUP_INDEX,
+			ADMIN_ID,
+			ADMIN_INDEX,
+			REG_DATE,
+			MENU_INDEX
+		)
+		VALUES
+		(
+		<foreach item="item" collection="menuIndex" separator="),(">
+			#{adminGroupIndex},
+			#{adminId},
+			#{adminIndex},
+			now(),
+			#{item}
+		</foreach>
+		)
+	</insert>
+
+	<insert id="insertAdminGroupPermission2" parameterType="com.skn.admin.site.dto.AdminGroupPermission">
+		INSERT INTO ADMIN_GROUP_PERMISSION
+		(
+		ADMIN_GROUP_INDEX,
+		MENU_INDEX,
+		PERMISSION,
+		ADMIN_ID,
+		ADMIN_INDEX,
+		REG_DATE
+		)
+		VALUES
+		(
+			#{adminGroupIndex},
+			#{menuIndex},
+			#{permission},
+			#{adminId},
+			#{adminIndex},
+			now()
+		)
+	</insert>
+
+	<insert id="insertGroupPermissions">
+		INSERT INTO ADMIN_GROUP_PERMISSION
+		(
+			ADMIN_GROUP_INDEX,
+			MENU_INDEX,
+			PERMISSION,
+			ADMIN_ID,
+			ADMIN_INDEX,
+			REG_DATE
+		)
+		VALUES
+		<foreach collection='permissionDtos' item='item' index='index' separator=','>
+			(#{adminGroupIndex}, #{item.menuIndex}, #{item.permission}, #{adminId}, #{adminIndex}, now())
+		</foreach>
+	</insert>
+
+	<update id="updateGroupPermission">
+		UPDATE ADMIN_GROUP_PERMISSION
+		SET PERMISSION = #{permission},
+			ADMIN_ID = #{adminId},
+			ADMIN_INDEX = #{adminIndex},
+			MOD_DATE = now()
+		WHERE ADMIN_GROUP_INDEX = #{adminGroupIndex}
+		  AND MENU_INDEX = #{menuIndex}
+
+	</update>
+	<delete id="deleteAdminGroupPermission" parameterType="java.lang.Integer">
+		DELETE FROM ADMIN_GROUP_PERMISSION
+		WHERE ADMIN_GROUP_INDEX = #{adminGroupIndex}
+	</delete>
+
+	<select id="selectGroupPermissionList" resultType="com.skn.admin.site.dto.AdminGroupPermission">
+		SELECT
+			ADMIN_GROUP_INDEX,
+			MENU_INDEX,
+			ADMIN_ID,
+			ADMIN_INDEX,
+			PERMISSION,
+			REG_DATE,
+			MOD_DATE
+		FROM ADMIN_GROUP_PERMISSION
+		WHERE ADMIN_GROUP_INDEX = #{adminGroupIndex}
+	</select>
+</mapper>

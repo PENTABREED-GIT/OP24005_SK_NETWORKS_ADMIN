@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skn.admin.account.mapper.AccountMapper">
+    <select id="login" parameterType="map" resultType="com.skn.admin.account.dto.Account">
+        SELECT
+            AD.UID
+             , AD.ADMIN_INDEX
+             , AD.ADMIN_ID
+             , AD.ADMIN_NAME
+             , AD.DEPARTMENT
+             , AD.DUTY
+             , AD.REG_DATE
+             , AD.MOD_DATE
+             , AD.PW_MOD_DATE
+             , COALESCE(AD.NEXT_PW_MOD_DATE, now()) AS NEXT_PW_MOD_DATE
+             , AD.EMAIL
+             , AG.GROUP_NAME
+             , AD.ADMIN_TYPE
+             , AD.IP
+             , AD.LAST_LOGIN_DATE
+             , AD.LAST_LOGIN_IP
+             , AD.ADMIN_GROUP_INDEX
+        FROM ADMIN AD INNER JOIN ADMIN_GROUP AG ON AD.ADMIN_GROUP_INDEX = AG.ADMIN_GROUP_INDEX AND AG.IS_USE = 'Y'
+        WHERE
+            AD.ADMIN_ID = #{adminId}
+          AND AD.ADMIN_PW = #{adminPw}
+          AND (AD.IP = '*' OR IP = #{ip})
+          AND AD.IS_USE = 'Y'
+    </select>
+
+    <select id="selectAdminPassword" parameterType="map" resultType="java.lang.String">
+        SELECT
+            ADMIN_PW
+        FROM
+            ADMIN
+        WHERE
+        <choose>
+            <when test="adminUid != null and adminUid != '' ">
+                UID = #{adminUid}
+            </when>
+            <otherwise>
+                ADMIN_ID = #{adminId}
+            </otherwise>
+        </choose>
+
+    </select>
+
+    <update id="updateLogInInfo" parameterType="map">
+        UPDATE ADMIN
+        SET
+            LAST_LOGIN_IP = #{ip},
+            LAST_LOGIN_DATE = NOW(),
+            LOGIN_FAIL_COUNT = 0
+        WHERE ADMIN_ID = #{adminId} AND IS_USE = 'Y'
+    </update>
+
+    <update id="updatePasswordById">
+        UPDATE ADMIN
+        SET ADMIN_PW = #{modPwd},
+            PW_MOD_DATE = NOW(),
+            MOD_DATE = NOW(),
+            LAST_LOGIN_DATE = NOW(),
+            LAST_LOGIN_IP = #{ip}
+        WHERE ADMIN_ID = #{adminId}
+    </update>
+
+    <update id="updatePasswordByUid" parameterType="map">
+        UPDATE ADMIN
+        SET ADMIN_PW = #{modPwd},
+            PW_MOD_DATE = NOW(),
+            MOD_DATE = NOW(),
+            NEXT_PW_MOD_DATE = DATE_ADD(NEXT_PW_MOD_DATE, INTERVAL #{pwPeriod} DAY),
+            LAST_LOGIN_DATE = NOW(),
+            LAST_LOGIN_IP = #{ip}
+        WHERE UID = #{adminUid}
+    </update>
+
+    <update id="updatePasswordNextTime">
+        UPDATE ADMIN
+        SET NEXT_PW_MOD_DATE = DATE_ADD(NEXT_PW_MOD_DATE, INTERVAL #{pwPeriodNext} DAY)
+        WHERE ADMIN_ID = #{adminId}
+    </update>
+
+    <update id="updateAccount" parameterType="com.skn.admin.account.dto.Account">
+        UPDATE ADMIN
+        SET
+            ADMIN_NAME = #{adminName},
+            DEPARTMENT = #{department},
+            DUTY = #{duty},
+            PHONE_NO = #{phoneNo},
+            EMAIL = #{email},
+            MOD_DATE = now()
+            <if test="adminPw != null and adminPw != '' ">
+                ,ADMIN_PW = #{adminPw}
+                ,PW_MOD_DATE = now()
+                , = 0
+            </if>
+            <if test="ip != null and ip != '' ">
+                ,IP = #{ip}
+            </if>
+        WHERE ADMIN_ID = #{adminId}
+    </update>
+
+    <update id="updateLoginFailCount" parameterType="map">
+        UPDATE ADMIN
+        SET
+            LOGIN_FAIL_COUNT = LOGIN_FAIL_COUNT + 1
+        WHERE ADMIN_ID = #{adminId}
+    </update>
+
+    <update id="updateUseYN" parameterType="map">
+        UPDATE ADMIN
+        SET IS_USE = #{useYN}
+        WHERE ADMIN_ID = #{adminId}
+    </update>
+</mapper>
+
+

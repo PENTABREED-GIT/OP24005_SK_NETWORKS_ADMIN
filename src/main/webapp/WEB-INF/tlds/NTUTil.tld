@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+        version="2.0">
+
+    <description>NTUtil functions library</description>
+    <display-name>NTUtil functions</display-name>
+    <tlib-version>1.1</tlib-version>
+    <short-name>ntUtil</short-name>
+    <uri>tld/NTUtil.tld</uri>
+
+    <function>
+        <description>마스킹처리</description>
+        <name>getMask</name>
+        <function-class>com.skn.admin.util.NTUtil</function-class>
+        <function-signature>java.lang.String getMask(java.lang.String,java.lang.String)</function-signature>
+        <example>
+            ${ntUtil:getMask(str)}
+        </example>
+    </function>
+    <function>
+        <description>복호화처리</description>
+        <name>decrypt</name>
+        <function-class>com.skn.admin.util.NTCryptoUtil</function-class>
+        <function-signature>java.lang.String decrypt(java.lang.String,java.lang.String)</function-signature>
+        <example>
+            ${ntUtil:decrypt(str, str)}
+        </example>
+    </function>
+    <function>
+        <description>HTML Tag 제거</description>
+        <name>removeHtml</name>
+        <function-class>com.skn.admin.util.NTUtil</function-class>
+        <function-signature>java.lang.String removeHtml(java.lang.String)</function-signature>
+        <example>
+            ${ntUtil:removeHtml(str)}
+        </example>
+    </function>
+</taglib>
