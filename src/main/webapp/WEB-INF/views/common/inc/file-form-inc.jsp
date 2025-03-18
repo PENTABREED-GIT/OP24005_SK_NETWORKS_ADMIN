@@ -109,7 +109,7 @@ boolean isSecureSelect = ( isSecure.equals("") ? true : false ) ;
             </td>
             <%} %>
             <td>
-                <c:if test="${row.fileExtension ne 'jpg' || 'png' || 'gif' || 'bmp' || 'svg' || 'jpeg'}">
+                <c:if test="${row.fileExtension ne 'jpg' || 'png' || 'gif' || 'bmp' || 'svg' || 'jpeg' || 'pdf'}">
 <%--                    <a>--%>
 <%--                        <img src="/assets/images/no_img.jpg" style="max-width:200px; max-height:180px">--%>
 <%--                    </a>--%>
