@@ -36,9 +36,13 @@
                 <if test="searchType == 'TITLE'">
                     AND TITLE LIKE CONCAT('%', #{searchWord}, '%')
                 </if>
-                <if test="searchType == 'ADMIN_NAME'">
-                    AND ADMIN_NAME LIKE CONCAT('%', #{searchWord}, '%')
+                <if test="searchType == 'CONTENT'">
+                    AND CONTENT LIKE CONCAT('%', #{searchWord}, '%')
                 </if>
+                <!--  [25.05.12] 관리자 페이지 고객문의 검색 기능 >> '답변자' 카테고리 삭제 요청 -->
+                <!--   <if test="searchType == 'ADMIN_NAME'">-->
+                <!--       AND ADMIN_NAME LIKE CONCAT('%', #{searchWord}, '%')-->
+                <!--   </if>-->
             </if>
             <if test="status != null and status != ''">
                 <if test='status.equals("READY")'>

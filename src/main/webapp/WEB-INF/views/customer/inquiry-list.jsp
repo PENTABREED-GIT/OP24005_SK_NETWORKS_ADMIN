@@ -107,7 +107,11 @@
                                                         <select class="form-select form-select-solid" name="searchType">
                                                             <option value="NAME"<c:if test="${searchParam.searchType eq 'NAME'}"> selected</c:if>>성명</option>
                                                             <option value="TITLE"<c:if test="${searchParam.searchType eq 'TITLE'}"> selected</c:if>>제목</option>
-                                                            <option value="ADMIN_NAME"<c:if test="${searchParam.searchType eq 'ADMIN_NAME'}"> selected</c:if>>답변자</option>
+                                                            <%--  [25.05.12] 관리자 페이지 고객문의 검색 기능 >> '내용' 카테고리 추가 요청--%>
+                                                            <option value="CONTENT"<c:if test="${searchParam.searchType eq 'CONTENT'}"> selected</c:if>>내용</option>
+
+                                                            <%--  [25.05.12] 관리자 페이지 고객문의 검색 기능 >> '답변자' 카테고리 삭제 요청--%>
+                                                            <%--   <option value="ADMIN_NAME"<c:if test="${searchParam.searchType eq 'ADMIN_NAME'}"> selected</c:if>>답변자</option>--%>
                                                         </select>
                                                     </span>
                                                     <!--end::Select-->
