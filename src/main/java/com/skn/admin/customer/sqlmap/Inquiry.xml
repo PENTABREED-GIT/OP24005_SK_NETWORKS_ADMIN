@@ -36,8 +36,13 @@
                 <if test="searchType == 'TITLE'">
                     AND TITLE LIKE CONCAT('%', #{searchWord}, '%')
                 </if>
+                <!-- [25.05.12] 관리자 페이지 고객문의 검색 기능 >> '내용' 카테고리 추가 요청 -->
                 <if test="searchType == 'CONTENT'">
                     AND CONTENT LIKE CONCAT('%', #{searchWord}, '%')
+                </if>
+                <!-- [25.05.12] 관리자 페이지 고객문의 검색 기능 >> '제목+내용' 카테고리 추가 요청 -->
+                <if test="searchType == 'CONTEN_TITLE'">
+                    AND ( CONTENT LIKE CONCAT('%', #{searchWord}, '%') OR  TITLE LIKE CONCAT('%', #{searchWord}, '%') )
                 </if>
                 <!--  [25.05.12] 관리자 페이지 고객문의 검색 기능 >> '답변자' 카테고리 삭제 요청 -->
                 <!--   <if test="searchType == 'ADMIN_NAME'">-->
